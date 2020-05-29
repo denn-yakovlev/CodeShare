@@ -1,0 +1,19 @@
+﻿<MatList Style="padding: 0px">
+    <MatListGroup>
+        <MatListGroupSubHeader Style="color: white; font-weight: bold; margin:18px">
+            Collaborators
+        </MatListGroupSubHeader>
+        <MatListDivider Style="border-color: white"></MatListDivider>
+        <div style="max-height: 92vh; overflow: auto">
+            @foreach (var user in users)
+            {
+                var user_ = user;
+                <MatListItem Style="color: white;">@user_</MatListItem>
+            }
+        </div>
+    </MatListGroup>
+</MatList>
+
+@code {
+    IEnumerable<string> users = Enumerable.Range(0, 100).Select(i => $"Anonymous#{i}");
+}

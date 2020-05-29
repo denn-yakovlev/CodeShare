@@ -1,0 +1,25 @@
+﻿@inject IJSRuntime jsRuntime;
+
+<div id="editor" style="width: 800px; height: 600px">
+    function foo(items) {
+    var x = "All this is syntax highlighted";
+    return x;
+    }
+</div>
+<MatButton Label="@label" Raised="true" Style="margin: 10px 10px 10px 0px" @onclick="Toggle"></MatButton>
+
+
+
+@code {
+    private bool isSaved = false;
+    string label = "Save";
+    void Toggle()
+    {
+        label = isSaved ? "Saved!" : "Save";
+        isSaved = !isSaved;
+    }
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        return jsRuntime.InvokeVoidAsync("aceInit", new object[0]).AsTask();
+    }
+}
