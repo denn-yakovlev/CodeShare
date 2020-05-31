@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.SignalR;
+using CodeShare.Services;
 
 namespace CodeShare
 {
@@ -27,6 +29,7 @@ namespace CodeShare
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -52,7 +55,9 @@ namespace CodeShare
             {
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
+                endpoints.MapHub<SomeHub>("/SomeHub");
             });
+
         }
     }
 }
