@@ -50,12 +50,15 @@ namespace CodeShare.Services.DatabaseInteractor.MongoDB
 
         public void Update(string id, T updates)
         {
-            throw new NotImplementedException();
+            updates.Id = id;
+            _collection.ReplaceOne(GetIdFilter(id), updates);
+            //_collection.UpdateOne(FindById(id), new UpdateDefinition<T>().Set())
         }
 
-        public Task UpdateAsync(string id, T updates)
+        public async Task UpdateAsync(string id, T updates)
         {
-            throw new NotImplementedException();
+            updates.Id = id;
+            await _collection.ReplaceOneAsync(GetIdFilter(id), updates);
         }
     }
 }

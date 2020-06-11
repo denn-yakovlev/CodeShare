@@ -29,6 +29,7 @@ namespace CodeShare.Services.DatabaseInteractor.MongoDB
 
         public void Dispose()
         {
+            throw new NotImplementedException();
         }
     }
 }

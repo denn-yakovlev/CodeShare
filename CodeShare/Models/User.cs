@@ -8,6 +8,7 @@ namespace CodeShare.Models
 
         public string Password { get; set; }
 
-        // public IProjectToRoleMapping RolesInProjects { get; set; }
+        public IDictionary<IReference<Project>, IEnumerable<IReference<Permission>>> 
+            RolesInProjects { get; set; }
     }
 }
