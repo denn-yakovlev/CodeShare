@@ -1,16 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore.SignalR;
-using CodeShare.Services;
+using CodeShare.Services.CollabManager;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using CodeShare.Services.DatabaseInteractor;
+using CodeShare.Services.DatabaseInteractor.MongoDB;
+using Microsoft.Extensions.Options;
 
 namespace CodeShare
 {
@@ -30,6 +27,19 @@ namespace CodeShare
             services.AddRazorPages();
             services.AddServerSideBlazor();
             services.AddSignalR();
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                    {
+                        options.LoginPath = "/Login";
+                        options.LogoutPath = "/Logout";
+                        options.ReturnUrlParameter = "returnRoute";
+                    }
+                );
+            services.AddHttpContextAccessor();
+            services.AddSingleton<ICollabManager, CollabManager>();
+            services.AddSingleton<IDatabaseInteractor, MongoInteractor>(
+                provider => new MongoInteractor("mongodb://localhost:27017", "codeshare")
+                );
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -51,11 +61,13 @@ namespace CodeShare
 
             app.UseRouting();
 
+            app.UseAuthentication();
+            
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
-                endpoints.MapHub<SomeHub>("/SomeHub");
+                endpoints.MapHub<ProjectsGlobalHub>("/globalHub");
             });
 
         }

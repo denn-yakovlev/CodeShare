@@ -1,0 +1,18 @@
+﻿@using System;
+@inject NavigationManager NavManager;
+
+<AuthorizeView>
+    <Authorized>
+        <div>Hello, @context.User.Identity.Name!</div>
+        <a href="/Logout?returnRoute=@LocalPath">Log out</a>
+    </Authorized>
+    <NotAuthorized>
+        <a href="/Register?returnRoute=@LocalPath">Register</a>
+        <a href="/Login?returnRoute=@LocalPath">Log in</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code
+{
+    string LocalPath => new Uri(NavManager.Uri).LocalPath;
+}
