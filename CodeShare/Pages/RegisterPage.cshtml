@@ -1,12 +1,12 @@
-﻿@page "/Login"
-@model CodeShare.Pages.LoginModel
+﻿@page "/Register"
+@model CodeShare.Pages.RegisterPageModel
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "RegisterPage";
     Layout = "_LoginRegisterLayout";
 }
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
-<h1>Login</h1>
+<h1>Register</h1>
 <form method="post">
     <div class="form-group">
         <label for="username">Username</label>
@@ -16,5 +16,11 @@
         <label for="password">Password</label>
         <input type="password" class="form-control" asp-for="@Model.Password" placeholder="At least 8 characters">
     </div>
+    <div class="form-group">
+        <label for="repeated-password">Repeat Password</label>
+        <input type="password" class="form-control" asp-for="@Model.RepeatedPassword" placeholder="At least 8 characters">
+    </div>
     <button type="submit" class="btn btn-primary">Submit</button>
 </form>
+
+
