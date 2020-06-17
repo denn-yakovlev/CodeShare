@@ -8,8 +8,6 @@
 </div>
 <MatButton Label="@label" Raised="true" Style="margin: 10px 10px 10px 0px" @onclick="Toggle"></MatButton>
 
-
-
 @code {
     private bool isSaved = false;
     string label = "Save";
@@ -18,8 +16,9 @@
         label = isSaved ? "Saved!" : "Save";
         isSaved = !isSaved;
     }
-    protected override Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        return jsRuntime.InvokeVoidAsync("aceInit", new object[0]).AsTask();
+        if (firstRender)
+            await jsRuntime.InvokeVoidAsync("aceInit", new object[0]).AsTask();
     }
 }

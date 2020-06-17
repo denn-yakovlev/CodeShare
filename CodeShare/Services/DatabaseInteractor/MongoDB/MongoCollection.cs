@@ -60,5 +60,15 @@ namespace CodeShare.Services.DatabaseInteractor.MongoDB
             updates.Id = id;
             await _collection.ReplaceOneAsync(GetIdFilter(id), updates);
         }
+
+        public IEnumerable<T> Filter(Predicate<T> filter)
+        {
+            return _collection.Find(FilterDefinition<T>.Empty).ToEnumerable().Where(item => filter(item));
+        }
+
+        public async Task<IEnumerable<T>> FilterAsync(Predicate<T> filter)
+        {
+            return (await _collection.FindAsync(FilterDefinition<T>.Empty)).ToEnumerable().Where(item => filter(item));
+        }
     }
 }

@@ -1,6 +1,71 @@
-﻿@page "/"
+﻿@page "/Projects/{ProjectId}"
+@inject IJSRuntime jsRuntime;
 
-<h1>Hello, world!</h1>
+@inject CodeShare.Services.CollabManager.ICollabManager CollabMgr;
 
-Welcome to your new app.
-<Ace></Ace>
+<div class="sidebar">
+    <MatList Style="padding: 0px">
+        <MatListGroup>
+            <MatListGroupSubHeader Style="color: white; font-weight: bold; margin:18px">
+                Collaborators
+            </MatListGroupSubHeader>
+            <MatListDivider Style="border-color: white"></MatListDivider>
+            <div style="max-height: 80vh; overflow: auto">
+                @foreach (var clb in Collaborators)
+                {
+                    var name = clb.UserName;
+                    <MatListItem  Style="color: white;">@name</MatListItem>
+                }
+            </div>
+        </MatListGroup>
+    </MatList>
+</div>
+<div style="margin:1.5rem">
+    <h1>@ProjectName</h1>
+
+    @ProjectDesciption
+    <Ace></Ace>
+</div>
+
+
+@code {
+
+    [Parameter]
+    public string ProjectId { get; set; }
+
+    [Parameter]
+    public string ProjectName { get; set; }
+
+    [Parameter]
+    public string ProjectDesciption { get; set; }
+
+    IEnumerable<CodeShare.Services.CollabManager.CollaboratorInfo> Collaborators { get; set; } =
+        new List<CodeShare.Services.CollabManager.CollaboratorInfo>();
+
+    protected override void OnInitialized()
+    {
+        CollabMgr.Connected += UpdateCollabListAsync;
+        CollabMgr.Disconnected += UpdateCollabListAsync;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await jsRuntime.InvokeVoidAsync("startSignalR", ProjectId);
+            var project = CollabMgr.GetProjectById(ProjectId);
+            ProjectName = project.Name;
+            ProjectDesciption = project.Description;
+            StateHasChanged();
+        }
+    }
+
+    async Task UpdateCollabListAsync(object sender, ConnToProjectEventArgs e)
+    {
+        await InvokeAsync(() =>
+        {
+            Collaborators = CollabMgr.GetProjectCollaborators(ProjectId);
+            StateHasChanged();
+        });
+    }
+}

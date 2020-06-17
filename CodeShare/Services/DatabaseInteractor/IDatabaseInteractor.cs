@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CodeShare.Services.DatabaseInteractor
 {
-    public interface IDatabaseInteractor : IDisposable
+    public interface IDatabaseInteractor //: IDisposable
     {
         IDataRepository<User> Users { get; }
 

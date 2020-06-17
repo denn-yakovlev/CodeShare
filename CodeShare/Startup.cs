@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using CodeShare.Services.DatabaseInteractor;
 using CodeShare.Services.DatabaseInteractor.MongoDB;
 using Microsoft.Extensions.Options;
+using CodeShare.Services.ProjectFilesystem;
+using Microsoft.Extensions.Logging;
 
 namespace CodeShare
 {
@@ -35,15 +37,17 @@ namespace CodeShare
                         options.ReturnUrlParameter = "returnRoute";
                     }
                 );
+            //services.AddLogging();
             services.AddHttpContextAccessor();
             services.AddSingleton<ICollabManager, CollabManager>();
+            services.AddSingleton<IFilesystemService, Filesystem>();
             services.AddSingleton<IDatabaseInteractor, MongoInteractor>(
                 provider => new MongoInteractor("mongodb://localhost:27017", "codeshare")
                 );
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())
             {
@@ -55,6 +59,7 @@ namespace CodeShare
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+            loggerFactory.CreateLogger<Startup>();
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
@@ -67,7 +72,7 @@ namespace CodeShare
             {
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
-                endpoints.MapHub<ProjectsGlobalHub>("/globalHub");
+                endpoints.MapHub<ProjectsGlobalHub>("/globalHub/{projectId}");
             });
 
         }

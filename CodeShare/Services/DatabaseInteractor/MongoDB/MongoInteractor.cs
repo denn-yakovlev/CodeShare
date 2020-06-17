@@ -27,9 +27,9 @@ namespace CodeShare.Services.DatabaseInteractor.MongoDB
 
         public IDataRepository<Project> Projects { get; }
 
-        public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
+        //public void Dispose()
+        //{
+        //    throw new NotImplementedException();
+        //}
     }
 }

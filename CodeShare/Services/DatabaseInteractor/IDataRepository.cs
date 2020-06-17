@@ -27,5 +27,9 @@ namespace CodeShare.Services.DatabaseInteractor
         Task UpdateAsync(string id, TItem updates);
 
         Task DeleteAsync(string id);
+
+        IEnumerable<TItem> Filter(Predicate<TItem> filter);
+
+        Task<IEnumerable<TItem>> FilterAsync(Predicate<TItem> filter);
     }
 }

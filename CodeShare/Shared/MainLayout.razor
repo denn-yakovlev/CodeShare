@@ -1,11 +1,16 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="sidebar">
+
+@*<div class="sidebar">
     <CollaboratorsList />
-</div>
+</div>*@
 
 <div class="main">
-    <div class="content px-4">
+    <div class="top-row px-4 auth">
+        <Login />
+        <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+    </div>
+    <div class="content px-4" style="display:flex">
         @Body
     </div>
 </div>
