@@ -8,8 +8,12 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using CodeShare.Services.DatabaseInteractor;
 using CodeShare.Services.DatabaseInteractor.MongoDB;
 using Microsoft.Extensions.Options;
-using CodeShare.Services.ProjectFilesystem;
 using Microsoft.Extensions.Logging;
+using AutoMapper;
+using CodeShare.Model.DTOs;
+using CodeShare.Model.Entities;
+
+using TaskEntity = CodeShare.Model.Entities.Task;
 
 namespace CodeShare
 {
@@ -40,10 +44,18 @@ namespace CodeShare
             //services.AddLogging();
             services.AddHttpContextAccessor();
             services.AddSingleton<ICollabManager, CollabManager>();
-            services.AddSingleton<IFilesystemService, Filesystem>();
             services.AddSingleton<IDatabaseInteractor, MongoInteractor>(
                 provider => new MongoInteractor("mongodb://localhost:27017", "codeshare")
                 );
+
+            var mapperCfg = new MapperConfiguration(
+                cfg =>
+                {
+                    cfg.CreateMap<Project, TaskEntity>();
+                }
+            );
+            var mapper = mapperCfg.CreateMapper();
+            services.AddSingleton(mapper);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

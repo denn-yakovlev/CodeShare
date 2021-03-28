@@ -1,4 +1,4 @@
-﻿using CodeShare.Models;
+﻿using CodeShare.Model.DTOs;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -19,8 +19,8 @@ namespace CodeShare.Services.DatabaseInteractor.MongoDB
         {
             _mongoClient = new MongoClient(connectionString);
             _database = _mongoClient.GetDatabase(databaseName);
-            Users = new MongoCollection<User>(_database, "users");
-            Projects = new MongoCollection<Project>(_database, "projects");
+            Users = new MongoRepository<User>(_database, "users");
+            Projects = new MongoRepository<Project>(_database, "projects");
         }
 
         public IDataRepository<User> Users { get; } 

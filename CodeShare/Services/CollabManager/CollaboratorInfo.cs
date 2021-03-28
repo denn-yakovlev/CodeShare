@@ -1,4 +1,4 @@
-﻿using CodeShare.Models;
+﻿using CodeShare.Model.DTOs;
 using System.Collections;
 using System.Collections.Generic;
 

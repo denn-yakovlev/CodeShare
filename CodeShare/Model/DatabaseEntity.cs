@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CodeShare.Models
+namespace CodeShare.Model
 {
     public abstract class DatabaseEntity : IEquatable<DatabaseEntity>
     {

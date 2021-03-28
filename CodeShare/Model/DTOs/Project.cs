@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
-namespace CodeShare.Models
+namespace CodeShare.Model.DTOs
 {
     public class Project : DatabaseEntity
     {
@@ -12,9 +9,8 @@ namespace CodeShare.Models
         public IReference<User> Owner { get; set; }
 
         public string Description { get; set; }
-        
+
         public IEnumerable<File> Files { get; set; }
 
-        
     }
 }

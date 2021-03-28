@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace CodeShare.Models
+namespace CodeShare.Model.DTOs
 {
     public class User : DatabaseEntity
     {
@@ -8,7 +8,8 @@ namespace CodeShare.Models
 
         public string Password { get; set; }
 
-        public IDictionary<IReference<Project>, IEnumerable<IReference<Permission>>> 
-            RolesInProjects { get; set; }
+        public IDictionary<IReference<Project>, IEnumerable<IReference<Permission>>>
+            RolesInProjects
+        { get; set; }
     }
 }

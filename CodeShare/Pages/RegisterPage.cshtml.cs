@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 using CodeShare.Services.DatabaseInteractor;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using CodeShare.Models;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
+using CodeShare.Model.DTOs;
 
 namespace CodeShare.Pages
 {

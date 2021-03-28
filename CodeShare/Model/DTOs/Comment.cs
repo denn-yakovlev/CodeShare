@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 
-namespace CodeShare.Models
+namespace CodeShare.Model.DTOs
 {
     public class Comment : DatabaseEntity
     {

@@ -1,11 +1,7 @@
-﻿using CodeShare.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Security.Principal;
-using System.Threading.Tasks;
 
-namespace CodeShare.Services
+namespace CodeShare.Utils
 {
     public class ConnToProjectEventArgs : EventArgs
     {

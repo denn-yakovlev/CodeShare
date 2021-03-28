@@ -1,5 +1,4 @@
-﻿using CodeShare.Models;
-using CodeShare.Services.TextEditor;
+﻿using CodeShare.Model.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +12,6 @@ namespace CodeShare.Services.CollabManager
 
         public Project ActiveProject { get; set; }
 
-        public ITextEditorService TextEditor { get; set; }
+        //public ITextEditorService TextEditor { get; set; }
     }
 }

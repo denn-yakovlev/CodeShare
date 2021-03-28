@@ -1,7 +1,6 @@
-﻿using CodeShare.Models;
+﻿using CodeShare.Model.DTOs;
 using CodeShare.Services.DatabaseInteractor;
-using CodeShare.Services.ProjectFilesystem;
-using CodeShare.Services.TextEditor;
+using CodeShare.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.VisualStudio.Web.CodeGeneration;
@@ -16,22 +15,11 @@ namespace CodeShare.Services.CollabManager
 {
     public class CollabManager : ICollabManager
     {
-        private IHubContext<ProjectsGlobalHub> hubContext;
-
         private IDatabaseInteractor dbInteractor;
 
-        private IFilesystemService filesystem;
-
-        private ITextEditorService textEditor;
-
-        public CollabManager(
-            IHubContext<ProjectsGlobalHub> hubContext, 
-            IDatabaseInteractor dbInteractor,
-            IFilesystemService filesystem)
+        public CollabManager(IDatabaseInteractor dbInteractor)
         {
-            this.hubContext = hubContext;
             this.dbInteractor = dbInteractor;
-            this.filesystem = filesystem;
         }
 
         public event Func<object, ConnToProjectEventArgs, Task> Connected;

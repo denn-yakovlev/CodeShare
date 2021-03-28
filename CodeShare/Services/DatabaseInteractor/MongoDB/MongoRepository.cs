@@ -1,4 +1,4 @@
-﻿using CodeShare.Models;
+﻿using CodeShare.Model;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace CodeShare.Services.DatabaseInteractor.MongoDB
 {
-    class MongoCollection<T> : IDataRepository<T> where T : DatabaseEntity
+    class MongoRepository<T> : IDataRepository<T> where T : DatabaseEntity
     {
         IMongoCollection<T> _collection;
 
-        public MongoCollection(IMongoDatabase database, string collectionName)
+        public MongoRepository(IMongoDatabase database, string collectionName)
         {
             _collection = database.GetCollection<T>(
                 collectionName, new MongoCollectionSettings { AssignIdOnInsert = true }

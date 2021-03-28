@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CodeShare.Models
+namespace CodeShare.Model.Entities
 {
-    public interface IReference<T>
+    public class User
     {
-        T ReferencedItem { get; }
+        public string Name { get; set; }
     }
 }

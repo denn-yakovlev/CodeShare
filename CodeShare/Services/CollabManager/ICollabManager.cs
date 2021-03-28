@@ -1,4 +1,5 @@
-﻿using CodeShare.Models;
+﻿using CodeShare.Model.DTOs;
+using CodeShare.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,8 +20,6 @@ namespace CodeShare.Services.CollabManager
 
         event Func<object, ConnToProjectEventArgs, Task> Connected;
 
-        event Func<object, ConnToProjectEventArgs, Task> Disconnected;
-    
-        
+        event Func<object, ConnToProjectEventArgs, Task> Disconnected;    
     }
 }
