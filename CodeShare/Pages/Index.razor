@@ -1,8 +1,8 @@
-﻿@page "/Projects/{ProjectId}"
+﻿@page "/{SessionId}"
 @inject IJSRuntime jsRuntime;
-@inject CodeShare.Services.CollabManager.ICollabManager CollabMgr;
+@inject CodeShare.Services.SessionsManager.ISessionsManager SessionsMgr;
 
-@using CodeShare.Utils
+@using Session = CodeShare.Model.Entities.Session;
 
 <div class="sidebar">
     <MatList Style="padding: 0px">
@@ -12,19 +12,17 @@
             </MatListGroupSubHeader>
             <MatListDivider Style="border-color: white"></MatListDivider>
             <div style="max-height: 80vh; overflow: auto">
-                @foreach (var clb in Collaborators)
+                @foreach (var collaborator in CurrentSession.Collaborators)
                 {
-                    var name = clb.UserName;
-                    <MatListItem  Style="color: white;">@name</MatListItem>
+                    <MatListItem  Style="color: white;">@collaborator.Name</MatListItem>
                 }
             </div>
         </MatListGroup>
     </MatList>
 </div>
 <div style="margin:1.5rem">
-    <h1>@ProjectName</h1>
-
-    @ProjectDesciption
+    <h1>@CurrentSession.CurrentTask.Name</h1>
+    @CurrentSession.CurrentTask.Description
     <Ace></Ace>
 </div>
 
@@ -32,41 +30,34 @@
 @code {
 
     [Parameter]
-    public string ProjectId { get; set; }
+    public string SessionId { get; set; }
 
     [Parameter]
-    public string ProjectName { get; set; }
-
-    [Parameter]
-    public string ProjectDesciption { get; set; }
-
-    IEnumerable<CodeShare.Services.CollabManager.CollaboratorInfo> Collaborators { get; set; } =
-        new List<CodeShare.Services.CollabManager.CollaboratorInfo>();
+    public Session CurrentSession { get; set; }
 
     protected override void OnInitialized()
     {
-        CollabMgr.Connected += UpdateCollabListAsync;
-        CollabMgr.Disconnected += UpdateCollabListAsync;
+        CurrentSession = SessionsMgr.GetSessionById(SessionId);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            await jsRuntime.InvokeVoidAsync("startSignalR", ProjectId);
-            var project = CollabMgr.GetProjectById(ProjectId);
-            ProjectName = project.Name;
-            ProjectDesciption = project.Description;
-            StateHasChanged();
-        }
+        //if (firstRender)
+        //{
+        //    await jsRuntime.InvokeVoidAsync("startSignalR", ProjectId);
+        //    var project = CollabMgr.GetProjectById(ProjectId);
+        //    ProjectName = project.Name;
+        //    ProjectDesciption = project.Description;
+        //    StateHasChanged();
+        //}
     }
 
-    async Task UpdateCollabListAsync(object sender, ConnToProjectEventArgs e)
-    {
-        await InvokeAsync(() =>
-        {
-            Collaborators = CollabMgr.GetProjectCollaborators(ProjectId);
-            StateHasChanged();
-        });
-    }
+    //async Task UpdateCollabListAsync(object sender, ConnToProjectEventArgs e)
+    //{
+    //    await InvokeAsync(() =>
+    //    {
+    //        Collaborators = CollabMgr.GetProjectCollaborators(ProjectId);
+    //        StateHasChanged();
+    //    });
+    //}
 }

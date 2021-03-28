@@ -7,7 +7,7 @@ namespace CodeShare.Model.Entities
     // основная сущность - сессия совместной работы
     public class Session
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; }
 
         public Task? CurrentTask { get; set; }
 

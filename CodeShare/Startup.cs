@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using CodeShare.Services.CollabManager;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using CodeShare.Services.DatabaseInteractor;
 using CodeShare.Services.DatabaseInteractor.MongoDB;
@@ -43,7 +42,7 @@ namespace CodeShare
                 );
             //services.AddLogging();
             services.AddHttpContextAccessor();
-            services.AddSingleton<ICollabManager, CollabManager>();
+            //services.AddSingleton<ISessionsManager, CollabManager>();
             services.AddSingleton<IDatabaseInteractor, MongoInteractor>(
                 provider => new MongoInteractor("mongodb://localhost:27017", "codeshare")
                 );
@@ -84,7 +83,6 @@ namespace CodeShare
             {
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
-                endpoints.MapHub<ProjectsGlobalHub>("/globalHub/{projectId}");
             });
 
         }
