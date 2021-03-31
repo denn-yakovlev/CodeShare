@@ -2,7 +2,7 @@
 {
     public class PermissionsInProject : DatabaseEntity
     {
-        public Reference<Project> Project { get; set; }
+        public Reference<Task> Project { get; set; }
 
         public Reference<Permission> Permission { get; set; }
     }

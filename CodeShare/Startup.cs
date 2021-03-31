@@ -6,13 +6,18 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using CodeShare.Services.DatabaseInteractor;
 using CodeShare.Services.DatabaseInteractor.MongoDB;
-using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using AutoMapper;
-using CodeShare.Model.DTOs;
-using CodeShare.Model.Entities;
 
+using TaskDTO = CodeShare.Model.DTOs.Task;
+using SolutionDTO = CodeShare.Model.DTOs.Solution;
+using SessionDTO = CodeShare.Model.DTOs.Session;
+using UserDTO = CodeShare.Model.DTOs.User;
 using TaskEntity = CodeShare.Model.Entities.Task;
+using SolutionEntity = CodeShare.Model.Entities.Solution;
+using SessionEntity = CodeShare.Model.Entities.Session;
+using UserEntity= CodeShare.Model.Entities.User;
+using CodeShare.Model.Entities;
 
 namespace CodeShare
 {
@@ -50,7 +55,24 @@ namespace CodeShare
             var mapperCfg = new MapperConfiguration(
                 cfg =>
                 {
-                    cfg.CreateMap<Project, TaskEntity>();
+                    cfg.CreateMap<TaskDTO, TaskEntity>();
+                    cfg.CreateMap<TaskEntity, TaskDTO>();
+                    cfg
+                    .CreateMap<SolutionEntity, SolutionDTO>()
+                    .ForMember(
+                        dst => dst.ProgrammingLanguageName,
+                        opt => opt.MapFrom(src => src.Language.Name)
+                        );
+                    cfg
+                    .CreateMap<SolutionDTO, SolutionEntity>()
+                    .ForMember(
+                        dst => dst.Language,
+                        opt => opt.MapFrom(src =>
+                            ProgrammingLanguage.GetByName(src.ProgrammingLanguageName)
+                            )
+                        );
+                    cfg.CreateMap<UserDTO, UserEntity>();
+                    cfg.CreateMap<UserEntity, UserDTO>();
                 }
             );
             var mapper = mapperCfg.CreateMapper();

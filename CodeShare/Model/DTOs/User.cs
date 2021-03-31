@@ -8,7 +8,7 @@ namespace CodeShare.Model.DTOs
 
         public string Password { get; set; }
 
-        public IDictionary<IReference<Project>, IEnumerable<IReference<Permission>>>
+        public IDictionary<IReference<Task>, IEnumerable<IReference<Permission>>>
             RolesInProjects
         { get; set; }
     }
