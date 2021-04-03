@@ -18,6 +18,8 @@ using SolutionEntity = CodeShare.Model.Entities.Solution;
 using SessionEntity = CodeShare.Model.Entities.Session;
 using UserEntity= CodeShare.Model.Entities.User;
 using CodeShare.Model.Entities;
+using CodeShare.Services.SessionsManager;
+using CodeShare.Services.TextEditor;
 
 namespace CodeShare
 {
@@ -47,7 +49,8 @@ namespace CodeShare
                 );
             //services.AddLogging();
             services.AddHttpContextAccessor();
-            //services.AddSingleton<ISessionsManager, CollabManager>();
+            services.AddTransient<ITextEditor, CollaborativeEditor>();
+            services.AddSingleton<ISessionsManager, SessionsManager>();
             services.AddSingleton<IDatabaseInteractor, MongoInteractor>(
                 provider => new MongoInteractor("mongodb://localhost:27017", "codeshare")
                 );
@@ -73,6 +76,13 @@ namespace CodeShare
                         );
                     cfg.CreateMap<UserDTO, UserEntity>();
                     cfg.CreateMap<UserEntity, UserDTO>();
+                    cfg.CreateMap<SessionDTO, SessionEntity>();
+                    cfg
+                    .CreateMap<SessionEntity, SessionDTO>()
+                    .ForMember(
+                        dst => dst.CurrentSolution,
+                        opt => opt.MapFrom(src => src.EditorInstance.Solution)
+                        );
                 }
             );
             var mapper = mapperCfg.CreateMapper();

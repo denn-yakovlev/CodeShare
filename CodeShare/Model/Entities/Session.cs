@@ -13,7 +13,7 @@ namespace CodeShare.Model.Entities
 
         public Task? CurrentTask { get; set; }
 
-        public ICollection<User> Collaborators { get; set; }
+        public ICollection<User> Collaborators { get; set; } = new List<User>();
 
         public ITextEditor EditorInstance { get; set; }
 

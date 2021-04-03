@@ -47,7 +47,7 @@ namespace CodeShare.Pages
             if (ModelState.IsValid && Password == RepeatedPassword)
             {
                 var user = (await DbInteractor.Users.FilterAsync(user => user.UserName == UserName)).SingleOrDefault();
-                Task registrationTask;
+                System.Threading.Tasks.Task registrationTask;
                 if (user == null)
                 {
                     var newUser = new User { UserName = UserName, Password = Password };
