@@ -20,12 +20,15 @@ namespace CodeShare.Services.DatabaseInteractor.MongoDB
             _mongoClient = new MongoClient(connectionString);
             _database = _mongoClient.GetDatabase(databaseName);
             Users = new MongoRepository<User>(_database, "users");
-            Projects = new MongoRepository<Project>(_database, "projects");
+            Tasks = new MongoRepository<Model.DTOs.Task>(_database, "projects");
+            Sessions = new MongoRepository<Session>(_database, "sessions");
         }
 
         public IDataRepository<User> Users { get; } 
 
-        public IDataRepository<Project> Projects { get; }
+        public IDataRepository<Model.DTOs.Task> Tasks { get; }
+
+        public IDataRepository<Session> Sessions { get; }
 
         //public void Dispose()
         //{

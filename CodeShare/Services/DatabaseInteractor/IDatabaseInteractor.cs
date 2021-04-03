@@ -6,6 +6,8 @@ namespace CodeShare.Services.DatabaseInteractor
     {
         IDataRepository<User> Users { get; }
 
-        IDataRepository<Project> Projects { get; }
+        IDataRepository<Task> Tasks { get; }
+
+        IDataRepository<Session> Sessions { get; }
     }
 }

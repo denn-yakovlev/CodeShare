@@ -11,13 +11,13 @@ namespace CodeShare.Services.SessionsManager
     /// </summary>
     public interface ISessionsManager
     {
-        Session GetSessionById(string sessionId);
+        Session? GetSessionById(string sessionId);
 
         Session CreateNewSession();
 
-        void ConnectToSession(User user, string sessionId);
+        Task ConnectToSession(User user, string sessionId);
 
-        void DisconnectFromSession(User user, string sessionId);
+        Task DisconnectFromSession(User user, string sessionId);
 
         event Func<object, SessionConnectionEventArgs, Task> Connected; 
 
