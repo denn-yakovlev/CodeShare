@@ -1,6 +1,4 @@
-﻿using CodeShare.Services.TextEditor;
-
-namespace CodeShare.Model.DTOs
+﻿namespace CodeShare.Model.DTOs
 {
     public class Session : DatabaseEntity
     {

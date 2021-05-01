@@ -1,0 +1,71 @@
+﻿@*@inject IJSRuntime jsRuntime;*@
+@inject NavigationManager NavManager;
+@implements IAsyncDisposable
+@*<div id="editor" style="width: 800px; height: 600px">*@
+    <BlazorMonaco.MonacoEditor Id="sample-code-editor-123"
+                               @ref="UnderlyingEditor" 
+                               ConstructionOptions="GetConstructionOptions" 
+                               OnDidChangeModelContent="OnDidChangeModelContent">
+    </BlazorMonaco.MonacoEditor>
+@*</div>*@
+<MatButton Label="@label" Raised="true" Style="margin: 10px 10px 10px 0px" @onclick="Toggle" @ref="Button"></MatButton>
+@*<InputTextArea @ref="@TextArea">some text</InputTextArea>*@
+
+@code {
+
+    [Parameter]
+    public string SessionId { get; set; } = string.Empty;
+
+    private bool isSaved = false;
+    private string label = "Save";
+
+    private MatButton Button { get; set; }
+    private MonacoEditor UnderlyingEditor { get; set; }
+
+    private HubConnection? connection;
+
+    private StandaloneEditorConstructionOptions GetConstructionOptions(MonacoEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            Language = "c",
+            GlyphMargin = true,
+            Value = "Hello world!\nAgain"
+        };
+    }
+
+    void OnDidChangeModelContent(BlazorMonaco.ModelContentChangedEvent e)
+    {
+
+    }
+
+    void Toggle()
+    {
+        label = isSaved ? "Saved!" : "Save";
+        isSaved = !isSaved;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            connection = new HubConnectionBuilder()
+                .WithUrl(NavManager.BaseUri + $"editor/{SessionId}")
+                .Build();
+            connection.Reconnecting += exc =>
+                Task.Run(() => Console.WriteLine("Reconnecting"));
+            
+            connection.ServerTimeout = TimeSpan.FromSeconds(10);
+            connection.KeepAliveInterval = TimeSpan.FromSeconds(5);
+            await connection.StartAsync();
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+
+    public async ValueTask DisposeAsync()
+    {
+        await (connection?.StopAsync() ?? Task.CompletedTask);
+        await (connection?.DisposeAsync() ?? new ValueTask());
+    }
+}

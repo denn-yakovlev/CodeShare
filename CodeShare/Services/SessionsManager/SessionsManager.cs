@@ -31,7 +31,7 @@ namespace CodeShare.Services.SessionsManager
             Disconnected += HandleLastDisconnected;
         }
 
-        public async Task ConnectToSession(User user, string sessionId)
+        public async Task ConnectToSessionAsync(User user, string sessionId)
         {
             //if (_activeSessions.ContainsKey(sessionId))
             //    session = _activeSessions[sessionId];
@@ -67,7 +67,7 @@ namespace CodeShare.Services.SessionsManager
             return newSession;
         }
 
-        public async Task DisconnectFromSession(User user, string sessionId)
+        public async Task DisconnectFromSessionAsync(User user, string sessionId)
         {
             var collaborators = _activeSessions[sessionId].Collaborators;
             collaborators.Remove(user);

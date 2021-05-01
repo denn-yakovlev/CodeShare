@@ -7,8 +7,8 @@ namespace CodeShare.Model.Entities
 {
     public class ProgrammingLanguage
     {
-        public string Name { get; }
-        public string DisplayName { get; }
+        public string Name { get; } = string.Empty;
+        public string DisplayName { get; } = string.Empty;
 
         public static ProgrammingLanguage C { get; } = new ProgrammingLanguage(cName, "C");
         public static ProgrammingLanguage Cpp { get; } = new ProgrammingLanguage(cppName, "C++");

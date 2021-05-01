@@ -18,36 +18,37 @@
     <script src="~/js//signalr/dist/browser/signalr.js"></script>
     <script src="_content/MatBlazor/dist/matBlazor.js"></script>
     <link href="_content/MatBlazor/dist/matBlazor.css" rel="stylesheet" />
-
+    
+    <link href="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.css" rel="stylesheet" />
+    
 
     <script>
-        function aceInit() {
-            var editor = ace.edit("editor");
-            editor.setTheme("ace/theme/monokai");
-            editor.session.setMode("ace/mode/javascript");
-        }
-    </script>
-    <script>
-        async function startSignalR(projectId) {    
-            try {
-                const connection = new signalR.HubConnectionBuilder()
-                    .withUrl(`/globalHub/${projectId}`)
-                    .configureLogging(signalR.LogLevel.Information)
-                    .build();
-                await connection.start();
-                await connection.invoke("ConnectToProject");
-            } catch (err) {
-                console.log(err);
-                setTimeout(() => startSignalR(projectId), 5000);
+            function aceInit() {
+                var editor = ace.edit("editor");
+                editor.setTheme("ace/theme/monokai");
+                editor.session.setMode("ace/mode/javascript");
             }
-        }
-    </script>
+        </script>
+        <script>
+            async function startSignalR(sessionId) {
+                try {
+                    const connection = new signalR.HubConnectionBuilder()
+                        .withUrl(`/editor/${sessionId}`)
+                        .configureLogging(signalR.LogLevel.Information)
+                        .build();
+                    await connection.start();
+                } catch (err) {
+                    console.log(err);
+                    setTimeout(() => startSignalR(sessionId), 5000);
+                }
+            }
+        </script>
 </head>
 <body>
     <app>
         <component type="typeof(App)" render-mode="ServerPrerendered" />
     </app>
-    
+
     <div id="blazor-error-ui">
         <environment include="Staging,Production">
             An error has occurred. This application may no longer respond until reloaded.
@@ -61,6 +62,9 @@
 
     <script src="_framework/blazor.server.js"></script>
     <script src="~/Ace/src-min/ace.js" type="text/javascript" charset="utf-8"></script>
-    
+    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
+    <script>require.config({ paths: { 'vs': '_content/BlazorMonaco/lib/monaco-editor/min/vs' } });</script>
+    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
+    <script src="_content/BlazorMonaco/jsInterop.js"></script>
 </body>
 </html>

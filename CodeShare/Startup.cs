@@ -19,7 +19,10 @@ using SessionEntity = CodeShare.Model.Entities.Session;
 using UserEntity= CodeShare.Model.Entities.User;
 using CodeShare.Model.Entities;
 using CodeShare.Services.SessionsManager;
-using CodeShare.Services.TextEditor;
+using CodeShare.Services.DatabaseInteractor.Test;
+using CodeShare.SignalR;
+using System.Collections.Generic;
+using System;
 
 namespace CodeShare
 {
@@ -36,9 +39,14 @@ namespace CodeShare
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddLogging();
             services.AddRazorPages();
             services.AddServerSideBlazor();
-            services.AddSignalR();
+            services.AddSignalR(hubOpts =>
+            {
+                hubOpts.ClientTimeoutInterval = TimeSpan.FromSeconds(10);
+                hubOpts.KeepAliveInterval = TimeSpan.FromSeconds(5);
+            });
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
                     {
@@ -49,11 +57,12 @@ namespace CodeShare
                 );
             //services.AddLogging();
             services.AddHttpContextAccessor();
-            services.AddTransient<ITextEditor, CollaborativeEditor>();
+            //services.AddTransient<ITextEditor, CollaborativeEditor>();
             services.AddSingleton<ISessionsManager, SessionsManager>();
-            services.AddSingleton<IDatabaseInteractor, MongoInteractor>(
-                provider => new MongoInteractor("mongodb://localhost:27017", "codeshare")
-                );
+            services.AddSingleton<IDatabaseInteractor, TestInteractor>();
+            //services.AddSingleton<IDatabaseInteractor, MongoInteractor>(
+            //    provider => new MongoInteractor("mongodb://localhost:27017", "codeshare")
+            //    );
 
             var mapperCfg = new MapperConfiguration(
                 cfg =>
@@ -76,7 +85,12 @@ namespace CodeShare
                         );
                     cfg.CreateMap<UserDTO, UserEntity>();
                     cfg.CreateMap<UserEntity, UserDTO>();
-                    cfg.CreateMap<SessionDTO, SessionEntity>();
+                    cfg
+                    .CreateMap<SessionDTO, SessionEntity>()
+                    .ForMember(
+                        dst => dst.Collaborators,
+                        opt => opt.NullSubstitute(new List<UserEntity>())
+                        );
                     cfg
                     .CreateMap<SessionEntity, SessionDTO>()
                     .ForMember(
@@ -115,8 +129,12 @@ namespace CodeShare
             {
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
+                endpoints.MapHub<TextEditorHub>("/editor/{sessionId}", options =>
+                {
+                    options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets;
+                    //options.WebSockets.CloseTimeout = TimeSpan.FromSeconds(5);
+                });
             });
-
         }
     }
 }

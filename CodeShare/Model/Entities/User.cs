@@ -8,7 +8,7 @@ namespace CodeShare.Model.Entities
 {
     public class User : IEquatable<User>
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         public bool Equals([AllowNull] User other) =>
             other != null && other.Name == Name;

@@ -1,5 +1,7 @@
-﻿@page "/{SessionId}"
-@inject IJSRuntime jsRuntime;
+﻿@page "/session/{SessionId}"
+@implements IAsyncDisposable
+@inject IJSRuntime JsRuntime;
+@inject ILogger<Index> Logger;
 @inject CodeShare.Services.SessionsManager.ISessionsManager SessionsMgr;
 
 @using Session = CodeShare.Model.Entities.Session;
@@ -21,43 +23,39 @@
     </MatList>
 </div>
 <div style="margin:1.5rem">
-    <h1>@CurrentSession.CurrentTask.Name</h1>
-    @CurrentSession.CurrentTask.Description
-    <Ace></Ace>
+    <h1>@CurrentSession?.CurrentTask?.Name</h1>
+    @CurrentSession?.CurrentTask?.Description   
+    <Editor @ref="Editor" SessionId="@SessionId"></Editor>
 </div>
-
 
 @code {
 
     [Parameter]
-    public string SessionId { get; set; }
+    public string SessionId { get; set; } = string.Empty;
 
-    [Parameter]
-    public Session CurrentSession { get; set; }
+    private Session CurrentSession { get; set; } = Session.Empty;
 
-    protected override void OnInitialized()
-    {
-        CurrentSession = SessionsMgr.GetSessionById(SessionId);
-    }
+    private Model.Entities.User CurrentUser { get; } = new Model.Entities.User { Name = "Some name" };
+
+    private Editor Editor { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        //if (firstRender)
-        //{
-        //    await jsRuntime.InvokeVoidAsync("startSignalR", ProjectId);
-        //    var project = CollabMgr.GetProjectById(ProjectId);
-        //    ProjectName = project.Name;
-        //    ProjectDesciption = project.Description;
-        //    StateHasChanged();
-        //}
+        if (firstRender)
+        {
+            await SessionsMgr.ConnectToSessionAsync(CurrentUser, SessionId);
+            CurrentSession = SessionsMgr.GetSessionById(SessionId);
+            StateHasChanged();
+
+            await base.OnInitializedAsync();
+        }
     }
 
-    //async Task UpdateCollabListAsync(object sender, ConnToProjectEventArgs e)
-    //{
-    //    await InvokeAsync(() =>
-    //    {
-    //        Collaborators = CollabMgr.GetProjectCollaborators(ProjectId);
-    //        StateHasChanged();
-    //    });
-    //}
+
+    public async ValueTask DisposeAsync()
+    {
+        Logger.LogDebug($"Disposing {nameof(Index)}");
+        await SessionsMgr.DisconnectFromSessionAsync(CurrentUser, SessionId);
+        await Editor.DisposeAsync();
+    }
 }

@@ -18,11 +18,11 @@ namespace CodeShare.Model
             this.repo = repo;
         }
 
-        public T ReferencedItem
+        public T? ReferencedItem
         {
             get
             {
-                T item;
+                T? item;
                 try
                 {
                     item = repo.Read(RefId);
@@ -35,6 +35,6 @@ namespace CodeShare.Model
             }
         }
 
-        public static implicit operator T(Reference<T> @ref) => @ref.ReferencedItem;
+        public static implicit operator T? (Reference<T> @ref) => @ref.ReferencedItem;
     }
 }

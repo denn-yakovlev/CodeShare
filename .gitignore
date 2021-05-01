@@ -342,3 +342,4 @@ healthchecksdb
 CodeShare/wwwroot/Ace/
 CodeShareUnitTests/
 /DataGenerator
+/CodeShare/Services/DatabaseInteractor/Test
