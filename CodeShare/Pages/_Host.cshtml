@@ -42,6 +42,13 @@
                     setTimeout(() => startSignalR(sessionId), 5000);
                 }
             }
+
+            window.disposeComponentOnTabClosed = function (dotnetHelper) {
+                window.onunload = async event => {
+                    await dotnetHelper.invokeMethodAsync("DisposeAsync")
+                    console.log("DisposeAsync done!");
+                }
+            }
         </script>
 </head>
 <body>

@@ -37,25 +37,29 @@
 
     private Model.Entities.User CurrentUser { get; } = new Model.Entities.User { Name = "Some name" };
 
-    private Editor Editor { get; set; }
+    private Editor? Editor { get; set; }
+
+    private DotNetObjectReference<Index>? objRef;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
+            objRef = DotNetObjectReference.Create(this);
+            await JsRuntime.InvokeVoidAsync("disposeComponentOnTabClosed", objRef);
             await SessionsMgr.ConnectToSessionAsync(CurrentUser, SessionId);
             CurrentSession = SessionsMgr.GetSessionById(SessionId);
             StateHasChanged();
-
-            await base.OnInitializedAsync();
         }
+        await base.OnInitializedAsync();
     }
 
-
+    [JSInvokable]
     public async ValueTask DisposeAsync()
     {
         Logger.LogDebug($"Disposing {nameof(Index)}");
         await SessionsMgr.DisconnectFromSessionAsync(CurrentUser, SessionId);
-        await Editor.DisposeAsync();
+        objRef?.Dispose();
+        await (Editor?.DisposeAsync() ?? new ValueTask());
     }
 }

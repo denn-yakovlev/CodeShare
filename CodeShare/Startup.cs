@@ -42,11 +42,7 @@ namespace CodeShare
             services.AddLogging();
             services.AddRazorPages();
             services.AddServerSideBlazor();
-            services.AddSignalR(hubOpts =>
-            {
-                hubOpts.ClientTimeoutInterval = TimeSpan.FromSeconds(10);
-                hubOpts.KeepAliveInterval = TimeSpan.FromSeconds(5);
-            });
+            services.AddSignalR();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
                     {
@@ -55,9 +51,7 @@ namespace CodeShare
                         options.ReturnUrlParameter = "returnRoute";
                     }
                 );
-            //services.AddLogging();
             services.AddHttpContextAccessor();
-            //services.AddTransient<ITextEditor, CollaborativeEditor>();
             services.AddSingleton<ISessionsManager, SessionsManager>();
             services.AddSingleton<IDatabaseInteractor, TestInteractor>();
             //services.AddSingleton<IDatabaseInteractor, MongoInteractor>(

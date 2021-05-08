@@ -8,13 +8,13 @@ namespace CodeShare.Utils
 {
     public struct LogootId : IComparable<LogootId>, IEquatable<LogootId>
     {
-        public decimal Position { get; }
+        public double Position { get; set; }
 
-        public int SiteId { get; }
+        public int SiteId { get; set; }
 
-        public int SiteClockValue { get; }
+        public int SiteClockValue { get; set; }
 
-        public LogootId(decimal position, int siteId, int siteClockValue)
+        public LogootId(double position, int siteId, int siteClockValue)
         {
             Position = position;
             SiteId = siteId;
@@ -53,6 +53,11 @@ namespace CodeShare.Utils
             return HashCode.Combine(Position, SiteId, SiteClockValue);
         }
 
+        public override string? ToString()
+        {
+            return $"[{Position}, {SiteId}, {SiteClockValue}]";
+        }
+
         public static bool operator ==(LogootId left, LogootId right)
         {
             return left.Equals(right);
@@ -83,7 +88,49 @@ namespace CodeShare.Utils
             return left.CompareTo(right) >= 0;
         }
 
-        public static LogootId Min { get; } = new LogootId(0.0m, -1, -1);
-        public static LogootId Max { get; } = new LogootId(1.0m, -1, -1);
+        public static LogootId Min { get; } = new LogootId(0, -1, -1);
+        public static LogootId Max { get; } = new LogootId(double.MaxValue, -1, -1);
+
+        private static Random _random = new Random();
+
+        public static IEnumerable<LogootId> GenerateBetween(
+            LogootId firstId, LogootId secondId, int amount, int site, int clock
+            )
+        
+        {
+            if (firstId >= secondId)
+                throw new ArgumentException($"{nameof(firstId)} must be lesser than {nameof(secondId)}");
+            if (amount < 1)
+                throw new ArgumentOutOfRangeException(nameof(amount), amount, "Should be at least 1");
+            if (amount == 1)
+            {
+                yield return new LogootId(
+                    RandomDoubleBetween(firstId.Position, secondId.Position),
+                    site,
+                    clock
+                );
+            }
+            else
+            {
+                var step = (secondId.Position - firstId.Position) / amount;
+                var firstPos = firstId.Position;
+                var secondPos = secondId.Position;
+                while (firstPos < secondPos)
+                {
+                    yield return new LogootId(
+                        RandomDoubleBetween(firstPos, firstPos + step),
+                        site,
+                        clock
+                    );
+                    firstPos += step;
+                }
+            }
+        }
+
+        private static double RandomDoubleBetween(double lo, double hi)
+        {
+            lo += double.Epsilon;
+            return lo + _random.NextDouble() * (hi - lo);
+        }
     }
 }

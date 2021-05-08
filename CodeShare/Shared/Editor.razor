@@ -1,14 +1,17 @@
-﻿@*@inject IJSRuntime jsRuntime;*@
+﻿@using Microsoft.JSInterop 
+@using CodeShare.Model.Entities
+@using Task = System.Threading.Tasks.Task
+@inject IJSRuntime JsRuntime;
+@inject ILogger<Editor> Logger;
 @inject NavigationManager NavManager;
 @implements IAsyncDisposable
 @*<div id="editor" style="width: 800px; height: 600px">*@
     <BlazorMonaco.MonacoEditor Id="sample-code-editor-123"
-                               @ref="UnderlyingEditor" 
                                ConstructionOptions="GetConstructionOptions" 
-                               OnDidChangeModelContent="OnDidChangeModelContent">
+                               OnDidChangeModelContent="HandleTextChange">
     </BlazorMonaco.MonacoEditor>
 @*</div>*@
-<MatButton Label="@label" Raised="true" Style="margin: 10px 10px 10px 0px" @onclick="Toggle" @ref="Button"></MatButton>
+<MatButton Label="@_label" Raised="true" Style="margin: 10px 10px 10px 0px" @onclick="Toggle" @ref="_button"></MatButton>
 @*<InputTextArea @ref="@TextArea">some text</InputTextArea>*@
 
 @code {
@@ -16,13 +19,20 @@
     [Parameter]
     public string SessionId { get; set; } = string.Empty;
 
-    private bool isSaved = false;
-    private string label = "Save";
+    private bool _isSaved = false;
+    private string _label = "Save";
 
-    private MatButton Button { get; set; }
-    private MonacoEditor UnderlyingEditor { get; set; }
+    private MatButton _button;
+    private CollaborativeEditor _logootEditor;
 
-    private HubConnection? connection;
+    private HubConnection? _connection;
+    private IDisposable? _onDeletion;
+    private IDisposable? _onInsertion;
+    private IDisposable? _onRangeDeletion;
+    private IDisposable? _onRangeInsertion;
+
+    private int _site;
+    private int _clock;
 
     private StandaloneEditorConstructionOptions GetConstructionOptions(MonacoEditor editor)
     {
@@ -30,42 +40,128 @@
         {
             Language = "c",
             GlyphMargin = true,
-            Value = "Hello world!\nAgain"
+            Value = "Hello!"
         };
     }
 
-    void OnDidChangeModelContent(BlazorMonaco.ModelContentChangedEvent e)
+    private void HandleTextChange(ModelContentChangedEvent e)
     {
+        foreach (var change in e.Changes)
+        {
+            var isDeletion = change.RangeLength > 0;
+            var isInsertion = change.Text.Length > 0;
+            var isDeletionOfOneChar = change.RangeLength == 1;
+            var isInsertionOfOneChar = change.Text.Length == 1;
 
+            if (isDeletion)
+            {
+                if (isDeletionOfOneChar)
+                {
+                    var atomToDelete = _logootEditor.GetAtomByOffset(change.RangeOffset);
+                    _logootEditor.Remove(atomToDelete);
+                    _connection.SendAsync("BroadcastDeletionAsync", SessionId, atomToDelete);
+                }
+                else
+                {
+                    var atomsToDelete = _logootEditor.GetAtomsArray(change.RangeOffset, change.RangeLength);
+                    _logootEditor.RemoveRange(atomsToDelete);
+                    _connection.SendAsync("BroadcastRangeDeletionAsync", SessionId, atomsToDelete);
+                }
+            }
+            if (isInsertion)
+            {
+                var prevAtom = _logootEditor.GetAtomByOffset(change.RangeOffset - 1);
+                var nextAtom = _logootEditor.GetAtomByOffset(change.RangeOffset);
+                if (isInsertionOfOneChar)
+                {
+                    var atomToInsert = new Utils.LogootAtom(
+                        Utils.LogootId.GenerateBetween(prevAtom.Id, nextAtom.Id, 1, _site, _clock).Single(),
+                        change.Text[0]
+                        );
+                    _logootEditor.Insert(atomToInsert);
+                    _connection.SendAsync("BroadcastInsertionAsync", SessionId, atomToInsert);
+                }
+                else
+                {
+                    var atomsToInsert = Utils.LogootId.GenerateBetween(
+                        prevAtom.Id, nextAtom.Id, change.Text.Length, _site, _clock
+                        )
+                        .Zip(change.Text)
+                        .Select(pair => new Utils.LogootAtom(pair.First, pair.Second));
+                    _logootEditor.InsertRange(atomsToInsert);
+                    _connection.SendAsync("BroadcastRangeInsertionAsync", SessionId, atomsToInsert);
+                }
+
+            }
+        }
     }
 
     void Toggle()
     {
-        label = isSaved ? "Saved!" : "Save";
-        isSaved = !isSaved;
+        _label = _isSaved ? "Saved!" : "Save";
+        _isSaved = !_isSaved;
+    }
+
+    protected override void OnInitialized()
+    {
+        _logootEditor = new CollaborativeEditor("Hello!");
+        base.OnInitialized();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            connection = new HubConnectionBuilder()
+            _connection = new HubConnectionBuilder()
                 .WithUrl(NavManager.BaseUri + $"editor/{SessionId}")
+                .WithAutomaticReconnect()
                 .Build();
-            connection.Reconnecting += exc =>
-                Task.Run(() => Console.WriteLine("Reconnecting"));
-            
-            connection.ServerTimeout = TimeSpan.FromSeconds(10);
-            connection.KeepAliveInterval = TimeSpan.FromSeconds(5);
-            await connection.StartAsync();
+            _connection.Reconnecting += LogReconnecting;
+            _connection.Reconnected += LogReconnected;
+            _onInsertion = _connection.On<Utils.LogootAtom>("Insert", atom =>
+            {
+                Logger.LogDebug("Client's insert called");
+                _logootEditor.Insert(atom);
+            });
+            _onDeletion = _connection.On<Utils.LogootAtom>("Delete", atom =>
+            {
+                Logger.LogDebug("Client's insert called");
+                _logootEditor.Remove(atom);
+            });
+            _onRangeInsertion = _connection.On<IEnumerable<Utils.LogootAtom>>("InsertRange", atoms =>
+            {
+                Logger.LogDebug("Client's insertRange called");
+                _logootEditor.InsertRange(atoms);
+            });
+            _onRangeDeletion = _connection.On<IEnumerable<Utils.LogootAtom>>("DeleteRange", atoms =>
+            {
+                Logger.LogDebug("Client's deleteRange called");
+                _logootEditor.RemoveRange(atoms);
+            });
+            await _connection.StartAsync();
         }
         await base.OnAfterRenderAsync(firstRender);
     }
 
+    private Task LogReconnected(string str)
+    {
+        return Task.Run(() => Logger.LogInformation($"Reconnected: {str}"));
+    }
+
+    private Task LogReconnecting(Exception exc)
+    {
+        return Task.Run(() => Logger.LogInformation($"Reconnecting, exception: {exc}"));
+    }
 
     public async ValueTask DisposeAsync()
     {
-        await (connection?.StopAsync() ?? Task.CompletedTask);
-        await (connection?.DisposeAsync() ?? new ValueTask());
+        await(_connection?.StopAsync() ?? Task.CompletedTask);
+        _connection.Reconnected -= LogReconnected;
+        _connection.Reconnecting -= LogReconnecting;
+        _onInsertion?.Dispose();
+        _onDeletion?.Dispose();
+        _onRangeInsertion?.Dispose();
+        _onRangeDeletion?.Dispose();
+        await (_connection?.DisposeAsync() ?? new ValueTask());
     }
 }

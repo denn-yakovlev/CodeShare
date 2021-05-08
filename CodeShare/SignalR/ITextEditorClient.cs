@@ -8,8 +8,8 @@ namespace CodeShare.SignalR
 {
     public interface ITextEditorClient
     {
-        void InsertAfter(LogootId idToInsertAfter, LogootAtom atom);
+        Task InsertAsync(LogootAtom atom);
 
-        void Delete(LogootId idToDelete);
+        Task DeleteAsync(LogootAtom atom);
     }
 }

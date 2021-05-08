@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace CodeShare.SignalR
 {
-    public class TextEditorHub : Hub<ITextEditorClient>
+    public class TextEditorHub : Hub//Hub<ITextEditorClient>
     {
         private ISessionsManager _sessionsMgr;
 
@@ -22,18 +22,36 @@ namespace CodeShare.SignalR
             _logger = logger;
         }
 
-        public void BroadcastInsertionAsync(string sessionId, LogootId idToInsertAfter, LogootAtom atom)
+        public async Task BroadcastInsertionAsync(string sessionId, LogootAtom atom)
         {
             var editor = _sessionsMgr.GetSessionById(sessionId)?.EditorInstance;
-            editor?.InsertAfter(idToInsertAfter, atom);
-            Clients.OthersInGroup(sessionId).InsertAfter(idToInsertAfter, atom);
+            editor?.Insert(atom);
+            await Clients.OthersInGroup(sessionId).SendAsync("Insert", atom);
+            //await Clients.OthersInGroup(sessionId).InsertAsync(atom);
         }
 
-        public void BroadcastDeletionAsync(string sessionId, LogootId idToRemove)
+        public async Task BroadcastDeletionAsync(string sessionId, LogootAtom atom)
         {
             var editor = _sessionsMgr.GetSessionById(sessionId)?.EditorInstance;
-            editor?.Remove(idToRemove);
-            Clients.OthersInGroup(sessionId).Delete(idToRemove);
+            editor?.Remove(atom);
+            await Clients.OthersInGroup(sessionId).SendAsync("Delete", atom);
+            //await Clients.OthersInGroup(sessionId).DeleteAsync(atom);
+        }
+
+        public async Task BroadcastRangeInsertionAsync(string sessionId, IEnumerable<LogootAtom> atoms)
+        {
+            var editor = _sessionsMgr.GetSessionById(sessionId)?.EditorInstance;
+            editor?.InsertRange(atoms);
+            await Clients.OthersInGroup(sessionId).SendAsync("InsertRange", atoms);
+            //await Clients.OthersInGroup(sessionId).InsertAsync(atom);
+        }
+
+        public async Task BroadcastRangeDeletionAsync(string sessionId, IEnumerable<LogootAtom> atoms)
+        {
+            var editor = _sessionsMgr.GetSessionById(sessionId)?.EditorInstance;
+            editor?.RemoveRange(atoms);
+            await Clients.OthersInGroup(sessionId).SendAsync("DeleteRange", atoms);
+            //await Clients.OthersInGroup(sessionId).DeleteAsync(atom);
         }
 
         public override async Task OnConnectedAsync()
