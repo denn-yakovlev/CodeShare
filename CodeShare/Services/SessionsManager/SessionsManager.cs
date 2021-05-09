@@ -4,20 +4,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using CodeShare.Services.DatabaseInteractor;
-
+using AutoMapper;
 using Session = CodeShare.Model.Entities.Session;
 using User = CodeShare.Model.Entities.User;
-using TaskEntity = CodeShare.Model.Entities.Task;
 using SessionDTO = CodeShare.Model.DTOs.Session;
-
-using System.Threading;
-using AutoMapper;
 
 namespace CodeShare.Services.SessionsManager
 {
     public class SessionsManager : ISessionsManager
     {
-        private ConcurrentDictionary<string, Session> _activeSessions = 
+        private ConcurrentDictionary<string, Session> _activeSessions =
             new ConcurrentDictionary<string, Session>();
 
         private IDatabaseInteractor _dbInteractor;
@@ -27,34 +23,30 @@ namespace CodeShare.Services.SessionsManager
         {
             _dbInteractor = dbInteractor;
             _automapper = mapper;
-            Connected += HandleFirstConnected;
-            Disconnected += HandleLastDisconnected;
         }
 
         public async Task ConnectToSessionAsync(User user, string sessionId)
         {
-            //if (_activeSessions.ContainsKey(sessionId))
-            //    session = _activeSessions[sessionId];
-            //else
-            //{
-            //    session = _automapper.Map<Session>(
-            //        await _dbInteractor.Sessions.ReadAsync(sessionId)
-            //        );
-            //    _activeSessions.TryAdd(sessionId, session);
-            //}
-            //_activeSessions[sessionId].Collaborators.Add(user);
-            await OnConnectedAsync(
-                this,
-                new SessionConnectionEventArgs
-                {
-                    SessionId = sessionId,
-                    User = user,
-                    IsFirst = !_activeSessions.ContainsKey(sessionId)
-                });
-            var session = _activeSessions[sessionId];
+            var session = await GetOrLoadSessionAsync(sessionId);
             session.Collaborators.Add(user);
+            await session.OnConnected();
         }
-            
+
+        private async Task<Session> GetOrLoadSessionAsync(string sessionId)
+        {
+            Session session;
+            if (_activeSessions.ContainsKey(sessionId))
+            {
+                session = _activeSessions[sessionId];
+            }
+            else
+            {
+                var sessionDto = await _dbInteractor.Sessions.ReadAsync(sessionId);
+                session = _automapper.Map<SessionDTO, Session>(sessionDto);
+                _activeSessions.TryAdd(sessionId, session);
+            }
+            return session;
+        }
 
         public Session CreateNewSession()
         {
@@ -69,16 +61,16 @@ namespace CodeShare.Services.SessionsManager
 
         public async Task DisconnectFromSessionAsync(User user, string sessionId)
         {
-            var collaborators = _activeSessions[sessionId].Collaborators;
+            var session = _activeSessions[sessionId];
+            var collaborators = session.Collaborators;
             collaborators.Remove(user);
-            await OnDisconnectedAsync(
-                this,
-                new SessionDisconnectionEventArgs
-                {
-                    SessionId = sessionId,
-                    User = user,
-                    IsLast = collaborators.Count == 0
-                });
+            if (collaborators.Count == 0)
+            {
+                var sessionDto = _automapper.Map<Session, SessionDTO>(session);
+                await _dbInteractor.Sessions.UpdateAsync(sessionId, sessionDto);
+                _activeSessions.TryRemove(sessionId, out _);
+            }
+            await session.OnDisconnected();
         }
 
         public Session? GetSessionById(string sessionId)
@@ -87,37 +79,6 @@ namespace CodeShare.Services.SessionsManager
             if (hasSession)
                 return session;
             return null;
-        }
-
-        public event Func<object, SessionConnectionEventArgs, Task> Connected;
-        public event Func<object, SessionDisconnectionEventArgs, Task> Disconnected;
-
-        private async Task OnConnectedAsync(object sender, SessionConnectionEventArgs ea) => 
-            await (Volatile.Read(ref Connected)?.Invoke(sender, ea) ?? Task.CompletedTask);
-
-        private async Task OnDisconnectedAsync(object sender, SessionDisconnectionEventArgs ea) =>
-            await (Volatile.Read(ref Disconnected)?.Invoke(sender, ea) ?? Task.CompletedTask);
-
-
-        private async Task HandleLastDisconnected(object sender, SessionDisconnectionEventArgs ea)
-        {
-            if (ea.IsLast)
-            {
-                var session = _activeSessions[ea.SessionId];
-                var sessionDto = _automapper.Map<Session, SessionDTO>(session);
-                await _dbInteractor.Sessions.UpdateAsync(ea.SessionId, sessionDto);
-                _activeSessions.TryRemove(ea.SessionId, out _);
-            }
-        }
-
-        private async Task HandleFirstConnected(object sender, SessionConnectionEventArgs ea)
-        {
-            if (ea.IsFirst)
-            {
-                var sessionDto = await _dbInteractor.Sessions.ReadAsync(ea.SessionId);
-                var session = _automapper.Map<SessionDTO, Session>(sessionDto);
-                _activeSessions.TryAdd(ea.SessionId, session);
-            }
         }
     }
 }

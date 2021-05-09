@@ -104,6 +104,7 @@
 
     protected override void OnInitialized()
     {
+        _site = HashCode.Combine(_connection?.ConnectionId ?? string.Empty);
         _logootEditor = new CollaborativeEditor("Hello!");
         base.OnInitialized();
     }

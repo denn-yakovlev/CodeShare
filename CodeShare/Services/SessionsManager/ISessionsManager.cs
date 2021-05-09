@@ -18,9 +18,5 @@ namespace CodeShare.Services.SessionsManager
         Task ConnectToSessionAsync(User user, string sessionId);
 
         Task DisconnectFromSessionAsync(User user, string sessionId);
-
-        event Func<object, SessionConnectionEventArgs, Task> Connected; 
-
-        event Func<object, SessionDisconnectionEventArgs, Task> Disconnected; 
     }
 }

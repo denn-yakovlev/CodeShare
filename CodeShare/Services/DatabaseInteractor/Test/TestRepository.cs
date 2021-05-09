@@ -21,21 +21,18 @@ namespace CodeShare.Services.DatabaseInteractor.Test
 
         public void Create(T item) => repo.TryAdd(item.Id, item);
 
-        public async Task CreateAsync(T item) => await Task.Run(() => Create(item));
+        public Task CreateAsync(T item) => Task.Run(() => Create(item));
 
         public void Delete(string id) => repo.TryRemove(id, out _);
 
-        public async Task DeleteAsync(string id) => await Task.Run(() => Delete(id));
+        public Task DeleteAsync(string id) => Task.Run(() => Delete(id));
 
-        public IEnumerable<T> Filter(Predicate<T> filter)
-        {
-            return repo.Select(kvpair => kvpair.Value).Where(value => filter(value));
-        }
+        public IEnumerable<T> Filter(Predicate<T> filter) =>
+            repo.Select(kvpair => kvpair.Value).Where(value => filter(value));
 
-        public Task<IEnumerable<T>> FilterAsync(Predicate<T> filter)
-        {
-            throw new NotImplementedException();
-        }
+        public Task<IEnumerable<T>> FilterAsync(Predicate<T> filter) =>
+            Task.Run(() => Filter(filter));
+
 
         public T Read(string id) => repo[id];
 
@@ -51,14 +48,10 @@ namespace CodeShare.Services.DatabaseInteractor.Test
 
         public async Task<T> ReadAsync(string id) => await Task.Run(() => Read(id));
 
-        public void Update(string id, T updates)
-        {
-            throw new NotImplementedException();
-        }
+        public void Update(string id, T updates) => 
+            repo.AddOrUpdate(id, i => updates, (key, old) => updates);
 
-        public Task UpdateAsync(string id, T updates)
-        {
-            throw new NotImplementedException();
-        }
+        public Task UpdateAsync(string id, T updates) =>
+            Task.Run(() => Update(id, updates));
     }
 }

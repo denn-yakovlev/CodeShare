@@ -11,12 +11,18 @@ namespace CodeShare.Services.DatabaseInteractor.Test
         public IDataRepository<User> Users { get; } =  new TestRepository<User>(
             new User 
             {
-                Id = "1",
+                Id = "12345",
                 UserName = "admin",
                 Password = "adminadmin"
             });
 
-        public IDataRepository<Model.DTOs.Task> Tasks => throw new NotImplementedException();
+        public IDataRepository<Model.DTOs.Task> Tasks => new TestRepository<Model.DTOs.Task>(
+            new Model.DTOs.Task
+            {
+                Id = "123",
+                Name = "Some task",
+                Description = "Some description"
+            });
 
         public IDataRepository<Session> Sessions { get; } = new TestRepository<Session>(
             new Session 

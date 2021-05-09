@@ -4,7 +4,9 @@
 @inject ILogger<Index> Logger;
 @inject CodeShare.Services.SessionsManager.ISessionsManager SessionsMgr;
 
+@using ISessionState = CodeShare.Model.Entities.ISessionState;
 @using Session = CodeShare.Model.Entities.Session;
+@using User = CodeShare.Model.Entities.User;
 
 <div class="sidebar">
     <MatList Style="padding: 0px">
@@ -16,7 +18,7 @@
             <div style="max-height: 80vh; overflow: auto">
                 @foreach (var collaborator in CurrentSession.Collaborators)
                 {
-                    <MatListItem  Style="color: white;">@collaborator.Name</MatListItem>
+                    <MatListItem Style="color: white;">@collaborator.Name</MatListItem>
                 }
             </div>
         </MatListGroup>
@@ -24,7 +26,7 @@
 </div>
 <div style="margin:1.5rem">
     <h1>@CurrentSession?.CurrentTask?.Name</h1>
-    @CurrentSession?.CurrentTask?.Description   
+    @CurrentSession?.CurrentTask?.Description
     <Editor @ref="Editor" SessionId="@SessionId"></Editor>
 </div>
 
@@ -33,13 +35,20 @@
     [Parameter]
     public string SessionId { get; set; } = string.Empty;
 
-    private Session CurrentSession { get; set; } = Session.Empty;
+    private ISessionState CurrentSession { get; set; } = Session.Empty;
 
-    private Model.Entities.User CurrentUser { get; } = new Model.Entities.User { Name = "Some name" };
+    private User CurrentUser { get; } = new User { Name = "Some name" };
 
     private Editor? Editor { get; set; }
 
     private DotNetObjectReference<Index>? objRef;
+
+    private async Task UpdateComponent(ISessionState sessionState) =>
+        await InvokeAsync(() =>
+        {
+            Logger.LogInformation($"UpdateComponent called, session {sessionState.Id}");
+            StateHasChanged();
+        });
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -49,6 +58,8 @@
             await JsRuntime.InvokeVoidAsync("disposeComponentOnTabClosed", objRef);
             await SessionsMgr.ConnectToSessionAsync(CurrentUser, SessionId);
             CurrentSession = SessionsMgr.GetSessionById(SessionId);
+            CurrentSession.Connected += UpdateComponent;
+            CurrentSession.Disconnected += UpdateComponent;
             StateHasChanged();
         }
         await base.OnInitializedAsync();
@@ -59,6 +70,8 @@
     {
         Logger.LogDebug($"Disposing {nameof(Index)}");
         await SessionsMgr.DisconnectFromSessionAsync(CurrentUser, SessionId);
+        CurrentSession.Connected -= UpdateComponent;
+        CurrentSession.Disconnected -= UpdateComponent;
         objRef?.Dispose();
         await (Editor?.DisposeAsync() ?? new ValueTask());
     }
