@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace CodeShare.Model.Entities
 {
-    public class CollaborativeEditor
+    public class CollaborativeEditor : ICloneable
     {
         public Solution Solution => new Solution()
         {
@@ -34,6 +34,17 @@ namespace CodeShare.Model.Entities
                 .Zip(text)
                 .Select(pair => new LogootAtom(pair.First, pair.Second));
             InsertRange(atoms);
+        }
+
+        private CollaborativeEditor(List<LogootAtom> atoms)
+        {
+            _atoms = atoms;
+            _atomsSyncRoot = ((ICollection)_atoms).SyncRoot;
+        }
+
+        public object Clone()
+        {
+            return new CollaborativeEditor(new List<LogootAtom>(_atoms));
         }
 
         private string SolutionSourceCode => new string(_atoms

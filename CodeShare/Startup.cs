@@ -39,17 +39,22 @@ namespace CodeShare
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            //services.AddLogging(builder => {
+            //    builder.ClearProviders();
+            //    builder.AddConsole();
+            //    builder.SetMinimumLevel(LogLevel.None);
+            //});
             services.AddLogging();
             services.AddRazorPages();
             services.AddServerSideBlazor();
             services.AddSignalR();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
-                    {
-                        options.LoginPath = "/Login";
-                        options.LogoutPath = "/Logout";
-                        options.ReturnUrlParameter = "returnRoute";
-                    }
+                {
+                    options.LoginPath = "/Login";
+                    options.LogoutPath = "/Logout";
+                    options.ReturnUrlParameter = "returnRoute";
+                }
                 );
             services.AddHttpContextAccessor();
             services.AddSingleton<ISessionsManager, SessionsManager>();
@@ -58,42 +63,7 @@ namespace CodeShare
             //    provider => new MongoInteractor("mongodb://localhost:27017", "codeshare")
             //    );
 
-            var mapperCfg = new MapperConfiguration(
-                cfg =>
-                {
-                    cfg.CreateMap<TaskDTO, TaskEntity>();
-                    cfg.CreateMap<TaskEntity, TaskDTO>();
-                    cfg
-                    .CreateMap<SolutionEntity, SolutionDTO>()
-                    .ForMember(
-                        dst => dst.ProgrammingLanguageName,
-                        opt => opt.MapFrom(src => src.Language.Name)
-                        );
-                    cfg
-                    .CreateMap<SolutionDTO, SolutionEntity>()
-                    .ForMember(
-                        dst => dst.Language,
-                        opt => opt.MapFrom(src =>
-                            ProgrammingLanguage.GetByName(src.ProgrammingLanguageName)
-                            )
-                        );
-                    cfg.CreateMap<UserDTO, UserEntity>();
-                    cfg.CreateMap<UserEntity, UserDTO>();
-                    cfg
-                    .CreateMap<SessionDTO, SessionEntity>()
-                    .ForMember(
-                        dst => dst.Collaborators,
-                        opt => opt.NullSubstitute(new List<UserEntity>())
-                        );
-                    cfg
-                    .CreateMap<SessionEntity, SessionDTO>()
-                    .ForMember(
-                        dst => dst.CurrentSolution,
-                        opt => opt.MapFrom(src => src.EditorInstance.Solution)
-                        );
-                }
-            );
-            var mapper = mapperCfg.CreateMapper();
+            IMapper mapper = CreateConfiguredMapper();
             services.AddSingleton(mapper);
         }
 
@@ -129,6 +99,85 @@ namespace CodeShare
                     //options.WebSockets.CloseTimeout = TimeSpan.FromSeconds(5);
                 });
             });
+        }
+
+        private static IMapper CreateConfiguredMapper()
+        {
+            var mapperCfg = new MapperConfiguration(
+                cfg =>
+                {
+                    ConfigureTasksMapping(cfg);
+                    ConfigureSolutionsMapping(cfg);
+                    ConfigureUsersMapping(cfg);
+                    ConfigureSessionsMapping(cfg);
+                }
+            );
+            var mapper = mapperCfg.CreateMapper();
+            return mapper;
+        }
+
+        private static void ConfigureSessionsMapping(IMapperConfigurationExpression cfg)
+        {
+            cfg
+            .CreateMap<SessionDTO, SessionEntity>()
+            .ForMember(
+                entity => entity.Collaborators,
+                opt => opt.NullSubstitute(new List<UserEntity>())
+                )
+            .ForMember(
+                entity => entity.EditorInstance,
+                opt => opt.MapFrom<EditorInstanceResolver>()
+                )
+            .ForMember(
+                entity => entity.CurrentTask,
+                opt => opt.MapFrom(dto => dto.Task)
+                );
+            cfg
+            .CreateMap<SessionEntity, SessionDTO>()
+            .ForMember(
+                dto => dto.CurrentSolution,
+                opt => opt.MapFrom(entity => entity.EditorInstance.Solution)
+                )
+            .ForMember(
+                dto => dto.Task,
+                opt => opt.MapFrom(entity => entity.CurrentTask)
+                );
+        }
+
+        private static void ConfigureUsersMapping(IMapperConfigurationExpression cfg)
+        {
+            cfg.CreateMap<UserDTO, UserEntity>();
+            cfg.CreateMap<UserEntity, UserDTO>();
+        }
+
+        private static void ConfigureSolutionsMapping(IMapperConfigurationExpression cfg)
+        {
+            cfg
+            .CreateMap<SolutionEntity, SolutionDTO>()
+            .ForMember(
+                dto => dto.ProgrammingLanguageName,
+                opt => opt.MapFrom(entity => entity.Language.Name)
+                );
+            cfg
+            .CreateMap<SolutionDTO, SolutionEntity>()
+            .ForMember(
+                entity => entity.Language,
+                opt => opt.MapFrom(dto =>
+                    ProgrammingLanguage.GetByName(dto.ProgrammingLanguageName)
+                    )
+                );
+        }
+
+        private static void ConfigureTasksMapping(IMapperConfigurationExpression cfg)
+        {
+            cfg.CreateMap<TaskDTO, TaskEntity>();
+            cfg.CreateMap<TaskEntity, TaskDTO>();
+        }
+
+        private class EditorInstanceResolver : IValueResolver<SessionDTO, SessionEntity, CollaborativeEditor?>
+        {
+            public CollaborativeEditor Resolve(SessionDTO source, SessionEntity destination, CollaborativeEditor? destMember, ResolutionContext context) =>
+                new CollaborativeEditor(source.CurrentSolution.SourceCode);
         }
     }
 }

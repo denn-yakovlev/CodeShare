@@ -27,7 +27,18 @@ namespace CodeShare.Services.DatabaseInteractor.Test
         public IDataRepository<Session> Sessions { get; } = new TestRepository<Session>(
             new Session 
             { 
-                Id = "1" 
+                Id = "1",
+                Task = new Model.DTOs.Task
+                {
+                    Id = "123",
+                    Name = "Some task",
+                    Description = "Some description"
+                },
+                CurrentSolution = new Solution
+                {
+                    ProgrammingLanguageName = "c",
+                    SourceCode = "Hello!"
+                }
             });
     }
 }

@@ -7,6 +7,7 @@
 @using ISessionState = CodeShare.Model.Entities.ISessionState;
 @using Session = CodeShare.Model.Entities.Session;
 @using User = CodeShare.Model.Entities.User;
+@using CollaborativeEditor = CodeShare.Model.Entities.CollaborativeEditor;
 
 <div class="sidebar">
     <MatList Style="padding: 0px">
@@ -25,9 +26,9 @@
     </MatList>
 </div>
 <div style="margin:1.5rem">
-    <h1>@CurrentSession?.CurrentTask?.Name</h1>
-    @CurrentSession?.CurrentTask?.Description
-    <Editor @ref="Editor" SessionId="@SessionId"></Editor>
+    <h1>@CurrentSession.CurrentTask?.Name</h1>
+    @CurrentSession.CurrentTask?.Description
+    <Editor @ref="Editor" SessionId="@SessionId" LogootEditor="@LogootEditor"></Editor>
 </div>
 
 @code {
@@ -41,6 +42,8 @@
 
     private Editor? Editor { get; set; }
 
+    private CollaborativeEditor? LogootEditor { get; set; }
+
     private DotNetObjectReference<Index>? objRef;
 
     private async Task UpdateComponent(ISessionState sessionState) =>
@@ -50,19 +53,35 @@
             StateHasChanged();
         });
 
+    protected override void OnInitialized()
+    {
+        Logger.LogDebug("OnInitialized called");
+        base.OnInitialized();
+        Logger.LogDebug("OnInitialized ended");
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Logger.LogDebug("OnParametersSetAsync called");
+        await SessionsMgr.ConnectToSessionAsync(CurrentUser, SessionId);
+        CurrentSession = SessionsMgr.GetSessionById(SessionId);
+        CurrentSession.Connected += UpdateComponent;
+        CurrentSession.Disconnected += UpdateComponent;
+        LogootEditor = (CollaborativeEditor)(CurrentSession.EditorInstance?.Clone() ?? new CollaborativeEditor());
+        await base.OnParametersSetAsync();
+        Logger.LogDebug("OnParametersSetAsync ended");
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        Logger.LogDebug($"OnAfterRenderAsync called, firstRender={firstRender}");
         if (firstRender)
         {
             objRef = DotNetObjectReference.Create(this);
             await JsRuntime.InvokeVoidAsync("disposeComponentOnTabClosed", objRef);
-            await SessionsMgr.ConnectToSessionAsync(CurrentUser, SessionId);
-            CurrentSession = SessionsMgr.GetSessionById(SessionId);
-            CurrentSession.Connected += UpdateComponent;
-            CurrentSession.Disconnected += UpdateComponent;
-            StateHasChanged();
         }
         await base.OnInitializedAsync();
+        Logger.LogDebug($"OnAfterRenderAsync ended, firstRender={firstRender}");
     }
 
     [JSInvokable]
