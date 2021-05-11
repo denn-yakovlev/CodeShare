@@ -10,7 +10,15 @@ namespace CodeShare.Model.Entities
     {
         public string Name { get; set; } = string.Empty;
 
+        public User(string name)
+        {
+            Name = name;
+        }
+
         public bool Equals([AllowNull] User other) =>
             other != null && other.Name == Name;
+
+        public static User CreateAnonymous() =>
+            new User("Anonymous");
     }
 }

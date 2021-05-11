@@ -2,6 +2,7 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JsRuntime;
 @inject ILogger<Index> Logger;
+@inject IHttpContextAccessor HttpCtxAccessor;
 @inject CodeShare.Services.SessionsManager.ISessionsManager SessionsMgr;
 
 @using ISessionState = CodeShare.Model.Entities.ISessionState;
@@ -38,7 +39,7 @@
 
     private ISessionState CurrentSession { get; set; } = Session.Empty;
 
-    private User CurrentUser { get; } = new User { Name = "Some name" };
+    private User _currentUser = User.CreateAnonymous();
 
     private Editor? Editor { get; set; }
 
@@ -63,7 +64,10 @@
     protected override async Task OnParametersSetAsync()
     {
         Logger.LogDebug("OnParametersSetAsync called");
-        await SessionsMgr.ConnectToSessionAsync(CurrentUser, SessionId);
+        var userName = HttpCtxAccessor.HttpContext.User.Identity.Name;
+        if (userName != null)
+            _currentUser = new User(userName);
+        await SessionsMgr.ConnectToSessionAsync(_currentUser, SessionId);
         CurrentSession = SessionsMgr.GetSessionById(SessionId);
         CurrentSession.Connected += UpdateComponent;
         CurrentSession.Disconnected += UpdateComponent;
@@ -88,7 +92,7 @@
     public async ValueTask DisposeAsync()
     {
         Logger.LogDebug($"Disposing {nameof(Index)}");
-        await SessionsMgr.DisconnectFromSessionAsync(CurrentUser, SessionId);
+        await SessionsMgr.DisconnectFromSessionAsync(_currentUser, SessionId);
         CurrentSession.Connected -= UpdateComponent;
         CurrentSession.Disconnected -= UpdateComponent;
         objRef?.Dispose();
