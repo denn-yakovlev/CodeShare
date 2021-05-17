@@ -1,9 +1,9 @@
 ﻿@page "/session/{SessionId}"
 @implements IAsyncDisposable
-@inject IJSRuntime JsRuntime;
-@inject ILogger<Index> Logger;
-@inject IHttpContextAccessor HttpCtxAccessor;
-@inject CodeShare.Services.SessionsManager.ISessionsManager SessionsMgr;
+@inject IJSRuntime _jsRuntime;
+@inject ILogger<Index> _logger;
+@inject IHttpContextAccessor _httpCtxAccessor;
+@inject CodeShare.Services.SessionsManager.ISessionsManager _sessionsMgr;
 
 @using ISessionState = CodeShare.Model.Entities.ISessionState;
 @using Session = CodeShare.Model.Entities.Session;
@@ -50,49 +50,49 @@
     private async Task UpdateComponent(ISessionState sessionState) =>
         await InvokeAsync(() =>
         {
-            Logger.LogInformation($"UpdateComponent called, session {sessionState.Id}");
+            _logger.LogInformation($"UpdateComponent called, session {sessionState.Id}");
             StateHasChanged();
         });
 
     protected override void OnInitialized()
     {
-        Logger.LogDebug("OnInitialized called");
+        _logger.LogDebug("OnInitialized called");
         base.OnInitialized();
-        Logger.LogDebug("OnInitialized ended");
+        _logger.LogDebug("OnInitialized ended");
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        Logger.LogDebug("OnParametersSetAsync called");
-        var userName = HttpCtxAccessor.HttpContext.User.Identity.Name;
+        _logger.LogDebug("OnParametersSetAsync called");
+        var userName = _httpCtxAccessor.HttpContext.User.Identity.Name;
         if (userName != null)
             _currentUser = new User(userName);
-        await SessionsMgr.ConnectToSessionAsync(_currentUser, SessionId);
-        CurrentSession = SessionsMgr.GetSessionById(SessionId);
+        await _sessionsMgr.ConnectToSessionAsync(_currentUser, SessionId);
+        CurrentSession = _sessionsMgr.GetSessionById(SessionId);
         CurrentSession.Connected += UpdateComponent;
         CurrentSession.Disconnected += UpdateComponent;
         LogootEditor = (CollaborativeEditor)(CurrentSession.EditorInstance?.Clone() ?? new CollaborativeEditor());
         await base.OnParametersSetAsync();
-        Logger.LogDebug("OnParametersSetAsync ended");
+        _logger.LogDebug("OnParametersSetAsync ended");
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        Logger.LogDebug($"OnAfterRenderAsync called, firstRender={firstRender}");
+        _logger.LogDebug($"OnAfterRenderAsync called, firstRender={firstRender}");
         if (firstRender)
         {
             objRef = DotNetObjectReference.Create(this);
-            await JsRuntime.InvokeVoidAsync("disposeComponentOnTabClosed", objRef);
+            await _jsRuntime.InvokeVoidAsync("disposeComponentOnTabClosed", objRef);
         }
         await base.OnInitializedAsync();
-        Logger.LogDebug($"OnAfterRenderAsync ended, firstRender={firstRender}");
+        _logger.LogDebug($"OnAfterRenderAsync ended, firstRender={firstRender}");
     }
 
     [JSInvokable]
     public async ValueTask DisposeAsync()
     {
-        Logger.LogDebug($"Disposing {nameof(Index)}");
-        await SessionsMgr.DisconnectFromSessionAsync(_currentUser, SessionId);
+        _logger.LogDebug($"Disposing {nameof(Index)}");
+        await _sessionsMgr.DisconnectFromSessionAsync(_currentUser, SessionId);
         CurrentSession.Connected -= UpdateComponent;
         CurrentSession.Disconnected -= UpdateComponent;
         objRef?.Dispose();

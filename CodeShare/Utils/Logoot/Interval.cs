@@ -16,5 +16,8 @@ namespace CodeShare.Utils.Logoot
             Begin = begin;
             End = end;
         }
+
+        public static implicit operator Interval<T>((T begin, T end) tuple) =>
+            new Interval<T>(tuple.begin, tuple.end);
     }
 }

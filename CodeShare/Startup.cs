@@ -39,11 +39,6 @@ namespace CodeShare
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            //services.AddLogging(builder => {
-            //    builder.ClearProviders();
-            //    builder.AddConsole();
-            //    builder.SetMinimumLevel(LogLevel.None);
-            //});
             services.AddLogging();
             services.AddRazorPages();
             services.AddServerSideBlazor();
@@ -96,7 +91,6 @@ namespace CodeShare
                 endpoints.MapHub<TextEditorHub>("/editor/{sessionId}", options =>
                 {
                     options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets;
-                    //options.WebSockets.CloseTimeout = TimeSpan.FromSeconds(5);
                 });
             });
         }

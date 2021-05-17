@@ -1,14 +1,9 @@
-﻿using CodeShare.Model.Entities;
-using CodeShare.Utils;
-using Microsoft.AspNetCore.SignalR;
+﻿using CodeShare.Utils;
+using CodeShare.Utils.Logoot;
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace CodeShare.Model.Entities
 {
@@ -29,10 +24,9 @@ namespace CodeShare.Model.Entities
 
         public CollaborativeEditor(string text) : this()
         {
-            var atoms = LogootId
-                .GenerateBetween(LogootId.Min, LogootId.Max, text.Length, 0, 0)
-                .Zip(text)
-                .Select(pair => new LogootAtom(pair.First, pair.Second));
+            var atoms = PositionId
+                .Generate((PositionId.Min, PositionId.Max), text.Length, 0, 0)
+                .Zip(text, (pos, @char) => new LogootAtom(pos, @char));
             InsertRange(atoms);
         }
 
@@ -51,7 +45,6 @@ namespace CodeShare.Model.Entities
             .Skip(1)
             .SkipLast(1)
             .Select(atom => atom.Char)
-            .Cast<char>()
             .ToArray()
             );
 
@@ -80,6 +73,7 @@ namespace CodeShare.Model.Entities
 
         public void Insert(LogootAtom atomToInsert)
         {
+            EnsureValidIdToInsert(atomToInsert.Id);
             var lessThanAtomToInsertCount = _atoms.TakeWhile(atom => atom.Id < atomToInsert.Id).Count();
             lock (_atomsSyncRoot)
                 _atoms.Insert(lessThanAtomToInsertCount, atomToInsert);
@@ -124,21 +118,21 @@ namespace CodeShare.Model.Entities
             }
         }
 
-        //private void EnsureValidIdToInsertAfter(LogootId idToInsertAfter)
-        //{
-        //    var ids = _atoms.Select(atom => atom.Id);
-        //    if (!ids.Contains(idToInsertAfter))
-        //        throw new ArgumentException($"{nameof(idToInsertAfter)} doesn't exist");
-        //    if (idToInsertAfter == LogootId.Max)
-        //        throw new ArgumentException($"cannot insert after last atom");
-        //}
 
-        private static void EnsureValidIdToRemove(LogootId idToRemove)
+        private static void EnsureValidIdToRemove(PositionId idToRemove)
         {
-            if (idToRemove == LogootId.Min)
+            if (idToRemove == PositionId.Min)
                 throw new ArgumentException($"cannot remove first atom");
-            if (idToRemove == LogootId.Max)
+            if (idToRemove == PositionId.Max)
                 throw new ArgumentException($"cannot remove last atom");
+        }
+
+        private void EnsureValidIdToInsert(PositionId id)
+        {
+            if (id <= PositionId.Min)
+                throw new ArgumentException($"inserted position id must be greater than {nameof(PositionId.Min)}");
+            if (id >= PositionId.Max)
+                throw new ArgumentException($"inserted position id must be less than {nameof(PositionId.Max)}");
         }
     }
 }

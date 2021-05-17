@@ -1,24 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Threading.Tasks;
+using CodeShare.Utils.Logoot;
 
 namespace CodeShare.Utils
 {
     public struct LogootAtom : IComparable<LogootAtom>, IEquatable<LogootAtom>
     {
-        public LogootId Id { get; set; }
+        public PositionId Id { get; set; }
         public char Char { get; set; }
 
-        public LogootAtom(LogootId id, char @char)
+        public LogootAtom(PositionId id, char @char)
         {
             Id = id;
             Char = @char;
         }
 
-        public static LogootAtom First { get; } = new LogootAtom(LogootId.Min, (char)0);
-        public static LogootAtom Last { get; } = new LogootAtom(LogootId.Max, (char)0);
+        public static LogootAtom First { get; } = new LogootAtom(PositionId.Min, (char)0);
+        public static LogootAtom Last { get; } = new LogootAtom(PositionId.Max, (char)0);
 
         public int CompareTo([AllowNull] LogootAtom other) => 
             Id.CompareTo(other.Id);
@@ -26,9 +24,7 @@ namespace CodeShare.Utils
         public bool Equals([AllowNull] LogootAtom other) => 
             Id.Equals(other.Id);
 
-        public override string ToString()
-        {
-            return $"{{{Id}, {Char}}}";
-        }
+        public override string ToString() => 
+            $"{{{Id}, {Char}}}";
     }
 }
