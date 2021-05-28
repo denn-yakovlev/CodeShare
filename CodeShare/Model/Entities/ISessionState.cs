@@ -8,7 +8,7 @@ namespace CodeShare.Model.Entities
     {
         ICollection<User> Collaborators { get; set; }
         Task? CurrentTask { get; set; }
-        CollaborativeEditor? EditorInstance { get; set; }
+        LogootDocument? LogootDocument { get; set; }
         string Id { get; set; }
 
         event Func<ISessionState, System.Threading.Tasks.Task> Connected;

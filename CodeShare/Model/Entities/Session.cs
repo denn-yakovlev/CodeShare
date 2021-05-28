@@ -15,7 +15,7 @@ namespace CodeShare.Model.Entities
 
         public ICollection<User> Collaborators { get; set; } = new List<User>();
 
-        public CollaborativeEditor? EditorInstance { get; set; }
+        public LogootDocument? LogootDocument { get; set; }
 
         public bool Equals([AllowNull] ISessionState other) =>
             other != null && other.Id == Id;
@@ -43,7 +43,7 @@ namespace CodeShare.Model.Entities
             Id = string.Empty,
             CurrentTask = null,
             Collaborators = new List<User>(),
-            EditorInstance = null
+            LogootDocument = null
         };
     }
 }

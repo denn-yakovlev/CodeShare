@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace CodeShare.Model.Entities
 {
-    public class CollaborativeEditor : ICloneable
+    public class LogootDocument : ICloneable
     {
         public Solution Solution => new Solution()
         {
@@ -17,12 +17,12 @@ namespace CodeShare.Model.Entities
 
         public ProgrammingLanguage SolutionLanguage { get; set; } = ProgrammingLanguage.C;
 
-        public CollaborativeEditor()
+        public LogootDocument()
         {
             _atomsSyncRoot = ((ICollection) _atoms).SyncRoot;
         }
 
-        public CollaborativeEditor(string text) : this()
+        public LogootDocument(string text) : this()
         {
             var atoms = PositionId
                 .Generate((PositionId.Min, PositionId.Max), text.Length, 0, 0)
@@ -30,7 +30,7 @@ namespace CodeShare.Model.Entities
             InsertRange(atoms);
         }
 
-        private CollaborativeEditor(List<LogootAtom> atoms)
+        private LogootDocument(List<LogootAtom> atoms)
         {
             _atoms = atoms;
             _atomsSyncRoot = ((ICollection)_atoms).SyncRoot;
@@ -38,7 +38,7 @@ namespace CodeShare.Model.Entities
 
         public object Clone()
         {
-            return new CollaborativeEditor(new List<LogootAtom>(_atoms));
+            return new LogootDocument(new List<LogootAtom>(_atoms));
         }
 
         private string SolutionSourceCode => new string(_atoms

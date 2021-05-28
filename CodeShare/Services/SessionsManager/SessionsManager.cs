@@ -25,11 +25,12 @@ namespace CodeShare.Services.SessionsManager
             _automapper = mapper;
         }
 
-        public async Task ConnectToSessionAsync(User user, string sessionId)
+        public async Task<Session> ConnectToSessionAsync(User user, string sessionId)
         {
             var session = await GetOrLoadSessionAsync(sessionId);
             session.Collaborators.Add(user);
             await session.OnConnected();
+            return session;
         }
 
         private async Task<Session> GetOrLoadSessionAsync(string sessionId)
@@ -59,7 +60,7 @@ namespace CodeShare.Services.SessionsManager
             return newSession;
         }
 
-        public async Task DisconnectFromSessionAsync(User user, string sessionId)
+        public async Task<Session> DisconnectFromSessionAsync(User user, string sessionId)
         {
             var session = _activeSessions[sessionId];
             var collaborators = session.Collaborators;
@@ -71,14 +72,9 @@ namespace CodeShare.Services.SessionsManager
                 _activeSessions.TryRemove(sessionId, out _);
             }
             await session.OnDisconnected();
+            return session;
         }
 
-        public Session? GetSessionById(string sessionId)
-        {
-            bool hasSession = _activeSessions.TryGetValue(sessionId, out Session session);
-            if (hasSession)
-                return session;
-            return null;
-        }
+        public Session GetSessionById(string sessionId) => _activeSessions[sessionId];
     }
 }

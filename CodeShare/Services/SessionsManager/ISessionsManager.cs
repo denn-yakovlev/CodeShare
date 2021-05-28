@@ -11,12 +11,12 @@ namespace CodeShare.Services.SessionsManager
     /// </summary>
     public interface ISessionsManager
     {
-        Session? GetSessionById(string sessionId);
+        Session GetSessionById(string sessionId);
 
         Session CreateNewSession();
 
-        Task ConnectToSessionAsync(User user, string sessionId);
+        Task<Session> ConnectToSessionAsync(User user, string sessionId);
 
-        Task DisconnectFromSessionAsync(User user, string sessionId);
+        Task<Session> DisconnectFromSessionAsync(User user, string sessionId);
     }
 }

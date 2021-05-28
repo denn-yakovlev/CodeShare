@@ -119,7 +119,7 @@ namespace CodeShare
                 opt => opt.NullSubstitute(new List<UserEntity>())
                 )
             .ForMember(
-                entity => entity.EditorInstance,
+                entity => entity.LogootDocument,
                 opt => opt.MapFrom<EditorInstanceResolver>()
                 )
             .ForMember(
@@ -130,7 +130,7 @@ namespace CodeShare
             .CreateMap<SessionEntity, SessionDTO>()
             .ForMember(
                 dto => dto.CurrentSolution,
-                opt => opt.MapFrom(entity => entity.EditorInstance.Solution)
+                opt => opt.MapFrom(entity => entity.LogootDocument.Solution)
                 )
             .ForMember(
                 dto => dto.Task,
@@ -168,10 +168,10 @@ namespace CodeShare
             cfg.CreateMap<TaskEntity, TaskDTO>();
         }
 
-        private class EditorInstanceResolver : IValueResolver<SessionDTO, SessionEntity, CollaborativeEditor?>
+        private class EditorInstanceResolver : IValueResolver<SessionDTO, SessionEntity, LogootDocument?>
         {
-            public CollaborativeEditor Resolve(SessionDTO source, SessionEntity destination, CollaborativeEditor? destMember, ResolutionContext context) =>
-                new CollaborativeEditor(source.CurrentSolution.SourceCode);
+            public LogootDocument Resolve(SessionDTO source, SessionEntity destination, LogootDocument? destMember, ResolutionContext context) =>
+                new LogootDocument(source.CurrentSolution.SourceCode);
         }
     }
 }

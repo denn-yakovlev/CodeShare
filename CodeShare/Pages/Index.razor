@@ -8,7 +8,7 @@
 @using ISessionState = CodeShare.Model.Entities.ISessionState;
 @using Session = CodeShare.Model.Entities.Session;
 @using User = CodeShare.Model.Entities.User;
-@using CollaborativeEditor = CodeShare.Model.Entities.CollaborativeEditor;
+@using Task = System.Threading.Tasks.Task
 
 <div class="sidebar">
     <MatList Style="padding: 0px">
@@ -29,7 +29,7 @@
 <div style="margin:1.5rem">
     <h1>@CurrentSession.CurrentTask?.Name</h1>
     @CurrentSession.CurrentTask?.Description
-    <Editor @ref="Editor" SessionId="@SessionId" LogootEditor="@LogootEditor"></Editor>
+    <Editor @ref="Editor" SessionId="@SessionId" CurrentSession="@CurrentSession"></Editor>
 </div>
 
 @code {
@@ -42,8 +42,6 @@
     private User _currentUser = User.CreateAnonymous();
 
     private Editor? Editor { get; set; }
-
-    private CollaborativeEditor? LogootEditor { get; set; }
 
     private DotNetObjectReference<Index>? objRef;
 
@@ -71,7 +69,6 @@
         CurrentSession = _sessionsMgr.GetSessionById(SessionId);
         CurrentSession.Connected += UpdateComponent;
         CurrentSession.Disconnected += UpdateComponent;
-        LogootEditor = (CollaborativeEditor)(CurrentSession.EditorInstance?.Clone() ?? new CollaborativeEditor());
         await base.OnParametersSetAsync();
         _logger.LogDebug("OnParametersSetAsync ended");
     }

@@ -24,7 +24,7 @@ namespace CodeShare.SignalR
 
         public async Task BroadcastInsertionAsync(string sessionId, LogootAtom atom)
         {
-            var editor = _sessionsMgr.GetSessionById(sessionId)?.EditorInstance;
+            var editor = _sessionsMgr.GetSessionById(sessionId)?.LogootDocument;
             editor?.Insert(atom);
             await Clients.OthersInGroup(sessionId).SendAsync("Insert", atom);
             //await Clients.OthersInGroup(sessionId).InsertAsync(atom);
@@ -32,7 +32,7 @@ namespace CodeShare.SignalR
 
         public async Task BroadcastDeletionAsync(string sessionId, LogootAtom atom)
         {
-            var editor = _sessionsMgr.GetSessionById(sessionId)?.EditorInstance;
+            var editor = _sessionsMgr.GetSessionById(sessionId)?.LogootDocument;
             editor?.Remove(atom);
             await Clients.OthersInGroup(sessionId).SendAsync("Delete", atom);
             //await Clients.OthersInGroup(sessionId).DeleteAsync(atom);
@@ -40,7 +40,7 @@ namespace CodeShare.SignalR
 
         public async Task BroadcastRangeInsertionAsync(string sessionId, IEnumerable<LogootAtom> atoms)
         {
-            var editor = _sessionsMgr.GetSessionById(sessionId)?.EditorInstance;
+            var editor = _sessionsMgr.GetSessionById(sessionId)?.LogootDocument;
             editor?.InsertRange(atoms);
             await Clients.OthersInGroup(sessionId).SendAsync("InsertRange", atoms);
             //await Clients.OthersInGroup(sessionId).InsertAsync(atom);
@@ -48,7 +48,7 @@ namespace CodeShare.SignalR
 
         public async Task BroadcastRangeDeletionAsync(string sessionId, IEnumerable<LogootAtom> atoms)
         {
-            var editor = _sessionsMgr.GetSessionById(sessionId)?.EditorInstance;
+            var editor = _sessionsMgr.GetSessionById(sessionId)?.LogootDocument;
             editor?.RemoveRange(atoms);
             await Clients.OthersInGroup(sessionId).SendAsync("DeleteRange", atoms);
             //await Clients.OthersInGroup(sessionId).DeleteAsync(atom);

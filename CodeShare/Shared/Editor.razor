@@ -23,7 +23,9 @@
     public string SessionId { get; set; } = string.Empty;
 
     [Parameter]
-    public CollaborativeEditor LogootEditor { get; set; }
+    public ISessionState CurrentSession { get; set; }
+
+    private LogootDocument _logootDocument;
 
     private bool _isSaved = false;
     private string _label = "Save";
@@ -44,10 +46,15 @@
     {
         return new StandaloneEditorConstructionOptions
         {
-            Language = LogootEditor.SolutionLanguage.Name,
+            Language = _logootDocument.SolutionLanguage.Name,
             GlyphMargin = true,
-            Value = LogootEditor.Solution.SourceCode
+            Value = _logootDocument.Solution.SourceCode
         };
+    }
+
+    protected override void OnInitialized()
+    {
+        _logootDocument = (LogootDocument)CurrentSession.LogootDocument.Clone();
     }
 
     private void HandleTextChanges(ModelContentChangedEvent e)
@@ -66,28 +73,28 @@
             {
                 if (isDeletionOfOneChar)
                 {
-                    var atomToDelete = LogootEditor.GetAtomByOffset(change.RangeOffset);
-                    LogootEditor.Remove(atomToDelete);
+                    var atomToDelete = _logootDocument.GetAtomByOffset(change.RangeOffset);
+                    _logootDocument.Remove(atomToDelete);
                     _connection.SendAsync("BroadcastDeletionAsync", SessionId, atomToDelete);
                 }
                 else
                 {
-                    var atomsToDelete = LogootEditor.GetAtomsArray(change.RangeOffset, change.RangeLength);
-                    LogootEditor.RemoveRange(atomsToDelete);
+                    var atomsToDelete = _logootDocument.GetAtomsArray(change.RangeOffset, change.RangeLength);
+                    _logootDocument.RemoveRange(atomsToDelete);
                     _connection.SendAsync("BroadcastRangeDeletionAsync", SessionId, atomsToDelete);
                 }
             }
             if (isInsertion)
             {
-                var prevAtom = LogootEditor.GetAtomByOffset(change.RangeOffset - 1);
-                var nextAtom = LogootEditor.GetAtomByOffset(change.RangeOffset);
+                var prevAtom = _logootDocument.GetAtomByOffset(change.RangeOffset - 1);
+                var nextAtom = _logootDocument.GetAtomByOffset(change.RangeOffset);
                 if (isInsertionOfOneChar)
                 {
                     var atomToInsert = new LogootAtom(
                         PositionId.Generate((prevAtom.Id, nextAtom.Id), 1, _site, _clock).Single(),
                         change.Text[0]
                         );
-                    LogootEditor.Insert(atomToInsert);
+                    _logootDocument.Insert(atomToInsert);
                     _connection.SendAsync("BroadcastInsertionAsync", SessionId, atomToInsert);
                 }
                 else
@@ -96,7 +103,7 @@
                         (prevAtom.Id, nextAtom.Id), change.Text.Length, _site, _clock
                         )
                         .Zip(change.Text, (pos, @char) => new LogootAtom(pos, @char));
-                    LogootEditor.InsertRange(atomsToInsert);
+                    _logootDocument.InsertRange(atomsToInsert);
                     _connection.SendAsync("BroadcastRangeInsertionAsync", SessionId, atomsToInsert);
                 }
 
@@ -125,25 +132,25 @@
             _onInsertion = _connection.On<LogootAtom>("Insert", atom =>
             {
                 _logger.LogDebug("Client's insert called");
-                LogootEditor.Insert(atom);
+                _logootDocument.Insert(atom);
                 UpdateUnderlyingEditor();
             });
             _onDeletion = _connection.On<LogootAtom>("Delete", atom =>
             {
                 _logger.LogDebug("Client's delete called");
-                LogootEditor.Remove(atom);
+                _logootDocument.Remove(atom);
                 UpdateUnderlyingEditor();
             });
             _onRangeInsertion = _connection.On<IEnumerable<LogootAtom>>("InsertRange", atoms =>
             {
                 _logger.LogDebug("Client's insertRange called");
-                LogootEditor.InsertRange(atoms);
+                _logootDocument.InsertRange(atoms);
                 UpdateUnderlyingEditor();
             });
             _onRangeDeletion = _connection.On<IEnumerable<LogootAtom>>("DeleteRange", atoms =>
             {
                 _logger.LogDebug("Client's deleteRange called");
-                LogootEditor.RemoveRange(atoms);
+                _logootDocument.RemoveRange(atoms);
                 UpdateUnderlyingEditor();
             });
             await _connection.StartAsync();
@@ -165,7 +172,7 @@
 
     private void UpdateUnderlyingEditor()
     {
-        _underlyingEditor.SetValue(LogootEditor.Solution.SourceCode);
+        _underlyingEditor.SetValue(_logootDocument.Solution.SourceCode);
         StateHasChanged();
     }
 
